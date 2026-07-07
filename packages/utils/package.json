@@ -1,0 +1,8 @@
+{
+  "name": "@nrt-ai-workforce/utils",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  }
+}

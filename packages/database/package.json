@@ -1,0 +1,16 @@
+{
+  "name": "@nrt-ai-workforce/database",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "dependencies": {
+    "@prisma/client": "^7.8.0"
+  },
+  "devDependencies": {
+    "prisma": "^7.8.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  }
+}
