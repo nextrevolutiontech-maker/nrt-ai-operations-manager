@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -34,11 +39,18 @@ export class CategoriesService {
   }
 
   async findAll(companyId: string, query: PaginationQueryDto) {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc', includeDeleted } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      includeDeleted,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { companyId };
-    
+
     if (!includeDeleted) {
       where.deletedAt = null;
     }
@@ -81,7 +93,12 @@ export class CategoriesService {
     return category;
   }
 
-  async update(companyId: string, id: string, userId: string, dto: UpdateCategoryDto) {
+  async update(
+    companyId: string,
+    id: string,
+    userId: string,
+    dto: UpdateCategoryDto,
+  ) {
     const category = await this.findOne(companyId, id);
 
     if (dto.name && dto.name !== category.name) {
@@ -156,17 +173,25 @@ export class CategoriesService {
       where: { id: parentId, companyId, deletedAt: null },
     });
     if (!parent) {
-      throw new BadRequestException('Parent category not found or belongs to another company');
+      throw new BadRequestException(
+        'Parent category not found or belongs to another company',
+      );
     }
   }
 
-  private async checkCircularDependency(companyId: string, categoryId: string, newParentId: string) {
+  private async checkCircularDependency(
+    companyId: string,
+    categoryId: string,
+    newParentId: string,
+  ) {
     let currentParentId: string | null = newParentId;
 
     // Traverse upwards to ensure the new parent is not a descendant of the current category
     while (currentParentId) {
       if (currentParentId === categoryId) {
-        throw new BadRequestException('Circular parent-child relationship detected');
+        throw new BadRequestException(
+          'Circular parent-child relationship detected',
+        );
       }
       const parentNode: any = await this.prisma.category.findUnique({
         where: { id: currentParentId },
@@ -177,15 +202,22 @@ export class CategoriesService {
     }
   }
 
-  private async logAudit(companyId: string, userId: string, action: string, entityId: string) {
-    await this.prisma.auditLog.create({
-      data: {
-        companyId,
-        userId,
-        action,
-        entity: 'Category',
-        entityId,
-      },
-    }).catch((e: any) => console.error('Failed to log audit:', e));
+  private async logAudit(
+    companyId: string,
+    userId: string,
+    action: string,
+    entityId: string,
+  ) {
+    await this.prisma.auditLog
+      .create({
+        data: {
+          companyId,
+          userId,
+          action,
+          entity: 'Category',
+          entityId,
+        },
+      })
+      .catch((e: any) => console.error('Failed to log audit:', e));
   }
 }

@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Flatten roles and permissions for easy access in guards
     const roles = user.userRoles.map((ur: any) => ur.role.name);
     const permissions = new Set<string>();
-    
+
     user.userRoles.forEach((ur: any) => {
       ur.role.rolePermissions.forEach((rp: any) => {
         permissions.add(rp.permission.name);

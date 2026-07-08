@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,20 +20,35 @@ export class AuthService {
 
   async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string) {
     const user = await this.usersService.findByEmail(loginDto.email);
-    
+
     if (!user || !user.isActive) {
-      this.logAudit(user?.id, user?.companyId, 'LOGIN_FAILED', 'User', user?.id || 'unknown');
+      this.logAudit(
+        user?.id,
+        user?.companyId,
+        'LOGIN_FAILED',
+        'User',
+        user?.id || 'unknown',
+      );
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       this.logAudit(user.id, user.companyId, 'LOGIN_FAILED', 'User', user.id);
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email, user.companyId, ipAddress, userAgent);
-    
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.companyId,
+      ipAddress,
+      userAgent,
+    );
+
     this.logAudit(user.id, user.companyId, 'LOGIN_SUCCESS', 'User', user.id);
 
     return {
@@ -58,7 +77,11 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async refreshToken(refreshToken: string, ipAddress?: string, userAgent?: string) {
+  async refreshToken(
+    refreshToken: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
         secret: process.env.JWT_REFRESH_SECRET,
@@ -79,10 +102,15 @@ export class AuthService {
           where: { userId: session.userId },
           data: { revokedAt: new Date() },
         });
-        throw new UnauthorizedException('Security alert: Token reuse detected. All sessions revoked.');
+        throw new UnauthorizedException(
+          'Security alert: Token reuse detected. All sessions revoked.',
+        );
       }
 
-      const isTokenValid = await bcrypt.compare(refreshToken, session.hashedRefreshToken);
+      const isTokenValid = await bcrypt.compare(
+        refreshToken,
+        session.hashedRefreshToken,
+      );
       if (!isTokenValid) {
         throw new UnauthorizedException('Invalid refresh token');
       }
@@ -98,25 +126,41 @@ export class AuthService {
         throw new UnauthorizedException('User is inactive or deleted');
       }
 
-      return this.generateTokens(user.id, user.email, user.companyId, ipAddress, userAgent);
+      return this.generateTokens(
+        user.id,
+        user.email,
+        user.companyId,
+        ipAddress,
+        userAgent,
+      );
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
 
-  async changePassword(userId: string, companyId: string, changePasswordDto: ChangePasswordDto) {
+  async changePassword(
+    userId: string,
+    companyId: string,
+    changePasswordDto: ChangePasswordDto,
+  ) {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
 
-    const isPasswordValid = await bcrypt.compare(changePasswordDto.oldPassword, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      changePasswordDto.oldPassword,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid old password');
     }
 
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10);
-    const newPasswordHash = await bcrypt.hash(changePasswordDto.newPassword, saltRounds);
+    const newPasswordHash = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      saltRounds,
+    );
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -134,13 +178,24 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
-  private async generateTokens(userId: string, email: string, companyId: string, ipAddress?: string, userAgent?: string) {
+  private async generateTokens(
+    userId: string,
+    email: string,
+    companyId: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const accessTokenPayload = { sub: userId, email, companyId };
     const accessToken = this.jwtService.sign(accessTokenPayload);
 
     // Calculate expiration date (default 7 days)
-    const refreshExpiresInDays = parseInt(process.env.JWT_REFRESH_EXPIRES_IN_DAYS || '7', 10);
-    const expiresAt = new Date(Date.now() + refreshExpiresInDays * 24 * 60 * 60 * 1000);
+    const refreshExpiresInDays = parseInt(
+      process.env.JWT_REFRESH_EXPIRES_IN_DAYS || '7',
+      10,
+    );
+    const expiresAt = new Date(
+      Date.now() + refreshExpiresInDays * 24 * 60 * 60 * 1000,
+    );
 
     // Create session record to get sessionId
     const session = await this.prisma.session.create({
@@ -174,17 +229,25 @@ export class AuthService {
     };
   }
 
-  private logAudit(userId: string | undefined, companyId: string | undefined, action: string, entity: string, entityId: string) {
+  private logAudit(
+    userId: string | undefined,
+    companyId: string | undefined,
+    action: string,
+    entity: string,
+    entityId: string,
+  ) {
     // Only attempt to log if companyId exists to respect constraints
     // If system-wide logging is supported (companyId nullable), we handle that too.
-    this.prisma.auditLog.create({
-      data: {
-        userId: userId || null,
-        companyId: companyId || null,
-        action,
-        entity,
-        entityId,
-      },
-    }).catch((e: any) => console.error('Failed to write audit log', e));
+    this.prisma.auditLog
+      .create({
+        data: {
+          userId: userId || null,
+          companyId: companyId || null,
+          action,
+          entity,
+          entityId,
+        },
+      })
+      .catch((e: any) => console.error('Failed to write audit log', e));
   }
 }

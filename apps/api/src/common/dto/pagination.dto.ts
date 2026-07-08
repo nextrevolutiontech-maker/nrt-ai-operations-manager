@@ -37,7 +37,9 @@ export class PaginationQueryDto {
   @IsOptional()
   sortOrder?: SortOrder = SortOrder.DESC;
 
-  @ApiPropertyOptional({ description: 'Filter to include softly deleted items' })
+  @ApiPropertyOptional({
+    description: 'Filter to include softly deleted items',
+  })
   @Type(() => Boolean)
   @IsOptional()
   includeDeleted?: boolean;

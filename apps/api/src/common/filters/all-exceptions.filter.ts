@@ -27,7 +27,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
         : 'Internal server error';
 
     // Log the exception securely
-    this.logger.error(`[${request.method}] ${request.url} - Status: ${status}`, exception);
+    this.logger.error(
+      `[${request.method}] ${request.url} - Status: ${status}`,
+      exception,
+    );
 
     // Provide a generic response structure
     response.status(status).json({
@@ -35,7 +38,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      error: typeof message === 'string' ? message : (message as any).message || message,
+      error:
+        typeof message === 'string'
+          ? message
+          : (message as any).message || message,
     });
   }
 }

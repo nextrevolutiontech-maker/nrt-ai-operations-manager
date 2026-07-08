@@ -1,6 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString, IsNumber, IsEnum, IsUUID, MaxLength, Min, IsArray } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsUUID,
+  MaxLength,
+  Min,
+  IsArray,
+} from 'class-validator';
 import { ProductStatus } from '@nrt-ai-workforce/database';
 
 export class CreateProductDto {
@@ -91,7 +101,11 @@ export class CreateProductDto {
   @IsString({ each: true })
   tags?: string[];
 
-  @ApiPropertyOptional({ description: 'Product Status', enum: ProductStatus, default: ProductStatus.ACTIVE })
+  @ApiPropertyOptional({
+    description: 'Product Status',
+    enum: ProductStatus,
+    default: ProductStatus.ACTIVE,
+  })
   @IsOptional()
   @IsEnum(ProductStatus)
   status?: ProductStatus = ProductStatus.ACTIVE;

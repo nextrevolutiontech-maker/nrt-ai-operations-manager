@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBrandDto } from './dto/create-brand.dto';
 import { UpdateBrandDto } from './dto/update-brand.dto';
@@ -29,7 +33,14 @@ export class BrandsService {
   }
 
   async findAll(companyId: string, query: PaginationQueryDto) {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc', includeDeleted } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      includeDeleted,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { companyId };
@@ -60,14 +71,20 @@ export class BrandsService {
     return brand;
   }
 
-  async update(companyId: string, id: string, userId: string, dto: UpdateBrandDto) {
+  async update(
+    companyId: string,
+    id: string,
+    userId: string,
+    dto: UpdateBrandDto,
+  ) {
     const brand = await this.findOne(companyId, id);
 
     if (dto.name && dto.name !== brand.name) {
       const existing = await this.prisma.brand.findUnique({
         where: { companyId_name: { companyId, name: dto.name } },
       });
-      if (existing) throw new ConflictException('Brand with this name already exists');
+      if (existing)
+        throw new ConflictException('Brand with this name already exists');
     }
 
     const updated = await this.prisma.brand.update({
@@ -106,9 +123,16 @@ export class BrandsService {
     return { message: 'Brand restored successfully' };
   }
 
-  private async logAudit(companyId: string, userId: string, action: string, entityId: string) {
-    await this.prisma.auditLog.create({
-      data: { companyId, userId, action, entity: 'Brand', entityId },
-    }).catch((e: any) => console.error('Failed to log audit:', e));
+  private async logAudit(
+    companyId: string,
+    userId: string,
+    action: string,
+    entityId: string,
+  ) {
+    await this.prisma.auditLog
+      .create({
+        data: { companyId, userId, action, entity: 'Brand', entityId },
+      })
+      .catch((e: any) => console.error('Failed to log audit:', e));
   }
 }

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
@@ -16,7 +21,9 @@ export class UnitsService {
       },
     });
     if (existing) {
-      throw new ConflictException('A unit with this symbol already exists (either globally or in your company)');
+      throw new ConflictException(
+        'A unit with this symbol already exists (either globally or in your company)',
+      );
     }
 
     const unit = await this.prisma.unit.create({
@@ -32,13 +39,20 @@ export class UnitsService {
   }
 
   async findAll(companyId: string, query: PaginationQueryDto) {
-    const { page = 1, limit = 10, search, sortBy = 'createdAt', sortOrder = 'desc', includeDeleted } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      includeDeleted,
+    } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {
       OR: [{ companyId }, { companyId: null }],
     };
-    
+
     if (!includeDeleted) where.deletedAt = null;
     if (search) {
       where.AND = [
@@ -79,7 +93,12 @@ export class UnitsService {
     return unit;
   }
 
-  async update(companyId: string, id: string, userId: string, dto: UpdateUnitDto) {
+  async update(
+    companyId: string,
+    id: string,
+    userId: string,
+    dto: UpdateUnitDto,
+  ) {
     const unit = await this.findOne(companyId, id);
     if (unit.companyId === null) {
       throw new ForbiddenException('Cannot modify a global system unit');
@@ -89,7 +108,8 @@ export class UnitsService {
       const existing = await this.prisma.unit.findFirst({
         where: { symbol: dto.symbol, OR: [{ companyId }, { companyId: null }] },
       });
-      if (existing) throw new ConflictException('A unit with this symbol already exists');
+      if (existing)
+        throw new ConflictException('A unit with this symbol already exists');
     }
 
     const updated = await this.prisma.unit.update({
@@ -131,9 +151,16 @@ export class UnitsService {
     return { message: 'Unit restored successfully' };
   }
 
-  private async logAudit(companyId: string, userId: string, action: string, entityId: string) {
-    await this.prisma.auditLog.create({
-      data: { companyId, userId, action, entity: 'Unit', entityId },
-    }).catch((e: any) => console.error('Failed to log audit:', e));
+  private async logAudit(
+    companyId: string,
+    userId: string,
+    action: string,
+    entityId: string,
+  ) {
+    await this.prisma.auditLog
+      .create({
+        data: { companyId, userId, action, entity: 'Unit', entityId },
+      })
+      .catch((e: any) => console.error('Failed to log audit:', e));
   }
 }

@@ -1,5 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { UnitsService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
@@ -23,15 +39,25 @@ export class UnitsController {
   @Permissions('manage:catalog')
   @ApiOperation({ summary: 'Create a new unit' })
   @ApiResponse({ status: 201, description: 'Unit created successfully' })
-  create(@Body() createUnitDto: CreateUnitDto, @Request() req: any) {
-    return this.unitsService.create(req.user.companyId, req.user.id, createUnitDto);
+  create(
+    @Body() createUnitDto: CreateUnitDto,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
+    return this.unitsService.create(
+      req.user.companyId,
+      req.user.id,
+      createUnitDto,
+    );
   }
 
   @Get()
   @Permissions('read:catalog', 'manage:catalog')
   @ApiOperation({ summary: 'List units (includes global units)' })
   @ApiResponse({ status: 200, description: 'Units retrieved successfully' })
-  findAll(@Query() query: PaginationQueryDto, @Request() req: any) {
+  findAll(
+    @Query() query: PaginationQueryDto,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
     return this.unitsService.findAll(req.user.companyId, query);
   }
 
@@ -39,7 +65,10 @@ export class UnitsController {
   @Permissions('read:catalog', 'manage:catalog')
   @ApiOperation({ summary: 'Get a specific unit' })
   @ApiResponse({ status: 200, description: 'Unit retrieved successfully' })
-  findOne(@Param('id') id: string, @Request() req: any) {
+  findOne(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
     return this.unitsService.findOne(req.user.companyId, id);
   }
 
@@ -47,15 +76,27 @@ export class UnitsController {
   @Permissions('manage:catalog')
   @ApiOperation({ summary: 'Update a unit (company specific only)' })
   @ApiResponse({ status: 200, description: 'Unit updated successfully' })
-  update(@Param('id') id: string, @Body() updateUnitDto: UpdateUnitDto, @Request() req: any) {
-    return this.unitsService.update(req.user.companyId, id, req.user.id, updateUnitDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateUnitDto: UpdateUnitDto,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
+    return this.unitsService.update(
+      req.user.companyId,
+      id,
+      req.user.id,
+      updateUnitDto,
+    );
   }
 
   @Delete(':id')
   @Permissions('manage:catalog')
   @ApiOperation({ summary: 'Soft delete a unit (company specific only)' })
   @ApiResponse({ status: 200, description: 'Unit soft-deleted successfully' })
-  remove(@Param('id') id: string, @Request() req: any) {
+  remove(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
     return this.unitsService.remove(req.user.companyId, id, req.user.id);
   }
 
@@ -63,7 +104,10 @@ export class UnitsController {
   @Permissions('manage:catalog')
   @ApiOperation({ summary: 'Restore a deleted unit' })
   @ApiResponse({ status: 200, description: 'Unit restored successfully' })
-  restore(@Param('id') id: string, @Request() req: any) {
+  restore(
+    @Param('id') id: string,
+    @Request() req: { user: { id: string; companyId: string } },
+  ) {
     return this.unitsService.restore(req.user.companyId, id, req.user.id);
   }
 }
