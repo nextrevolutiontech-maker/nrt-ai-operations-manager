@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Sprint 7] - Workflow & Approval Engine - 2026-07-09
+### Added
+- Introduced `Workflow` and `ApprovalLevel` models for defining flexible, multi-tier approval sequences.
+- Generic `ApprovalRequest` and immutable `ApprovalHistory` to trace entity status changes across the application.
+- Event-driven integration (`@nestjs/event-emitter`) syncing the decoupled Approval Engine directly with Purchase Order transitions.
+- Multi-approver capability requiring absolute distinct users to sign off before promoting workflow states.
+- Fully automated Purchase Order status locking and automated transitions upon approval rejection or finalization.
+
+### Changed
+- Shifted Procurement Approval flows from direct manual endpoints to the central Approval Engine automatically generated via Draft -> Pending Approval.
+
 ## [Sprint 6] - Procurement Management - 2026-07-08
 ### Added
 - Complete Supplier Management module with rich details (Contact Person, Mobile, Tax Number) and `SupplierStatus`.

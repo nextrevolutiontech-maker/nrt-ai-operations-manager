@@ -9,11 +9,21 @@ import { CreatePurchaseOrderDto } from './dto/create-purchase-order.dto';
 import { UpdatePurchaseOrderDto } from './dto/update-purchase-order.dto';
 import { ReceiveGoodsDto } from './dto/receive-goods.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
-import { POStatus, MovementType, Prisma } from '@nrt-ai-workforce/database';
+import {
+  POStatus,
+  MovementType,
+  Prisma,
+  RequestStatus,
+} from '@nrt-ai-workforce/database';
+import { ApprovalsService } from '../approvals/approvals.service';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PurchaseOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly approvalsService: ApprovalsService,
+  ) {}
 
   private async generatePurchaseNumber(
     companyId: string,
@@ -197,44 +207,58 @@ export class PurchaseOrdersService {
     userId: string,
     newStatus: POStatus,
   ) {
-    return this.prisma.$transaction(async (tx) => {
-      const po = await tx.purchaseOrder.findFirst({ where: { id, companyId } });
-      if (!po) throw new NotFoundException('Purchase Order not found');
-
-      const currentStatus = po.status;
-
-      // Strict Transitions
-      const allowedTransitions: Record<string, string[]> = {
-        [POStatus.DRAFT]: [POStatus.PENDING_APPROVAL, POStatus.CANCELLED],
-        [POStatus.PENDING_APPROVAL]: [POStatus.APPROVED, POStatus.CANCELLED],
-        [POStatus.APPROVED]: [POStatus.PARTIALLY_RECEIVED, POStatus.COMPLETED],
-        [POStatus.PARTIALLY_RECEIVED]: [POStatus.COMPLETED],
-      };
-
-      if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
-        throw new BadRequestException(
-          `Cannot transition from ${currentStatus} to ${newStatus}`,
-        );
-      }
-
-      const updated = await tx.purchaseOrder.update({
-        where: { id },
-        data: { status: newStatus, updatedBy: userId },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          userId,
-          action: 'UPDATE_PO_STATUS',
-          entity: 'PurchaseOrder',
-          entityId: id,
-          details: { from: currentStatus, to: newStatus },
-        },
-      });
-
-      return updated;
+    const po = await this.prisma.purchaseOrder.findFirst({
+      where: { id, companyId },
     });
+    if (!po) throw new NotFoundException('Purchase Order not found');
+
+    const currentStatus = po.status;
+
+    // Strict Transitions
+    const allowedTransitions: Record<string, string[]> = {
+      [POStatus.DRAFT]: [POStatus.PENDING_APPROVAL, POStatus.CANCELLED],
+      [POStatus.PENDING_APPROVAL]: [POStatus.APPROVED, POStatus.CANCELLED],
+      [POStatus.APPROVED]: [POStatus.PARTIALLY_RECEIVED, POStatus.COMPLETED],
+      [POStatus.PARTIALLY_RECEIVED]: [POStatus.COMPLETED],
+    };
+
+    if (!allowedTransitions[currentStatus]?.includes(newStatus)) {
+      throw new BadRequestException(
+        `Cannot transition from ${currentStatus} to ${newStatus}`,
+      );
+    }
+
+    if (
+      currentStatus === POStatus.DRAFT &&
+      newStatus === POStatus.PENDING_APPROVAL
+    ) {
+      // Auto-trigger workflow engine
+      await this.approvalsService.createRequest(
+        companyId,
+        'PROCUREMENT',
+        'PurchaseOrder',
+        id,
+        userId,
+      );
+    }
+
+    const updated = await this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { status: newStatus, updatedBy: userId },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        companyId,
+        userId,
+        action: 'UPDATE_PO_STATUS',
+        entity: 'PurchaseOrder',
+        entityId: id,
+        details: { from: currentStatus, to: newStatus },
+      },
+    });
+
+    return updated;
   }
 
   async receiveGoods(
@@ -382,5 +406,49 @@ export class PurchaseOrdersService {
 
       return { success: true, status: newStatus };
     });
+  }
+
+  @OnEvent('approval.completed')
+  async handleApprovalCompleted(payload: {
+    requestId: string;
+    entityType: string;
+    entityId: string;
+    status: RequestStatus;
+  }) {
+    if (payload.entityType !== 'PurchaseOrder') return;
+
+    const poId = payload.entityId;
+    let newStatus: POStatus | null = null;
+
+    if (payload.status === RequestStatus.APPROVED) {
+      newStatus = POStatus.APPROVED;
+    } else if (
+      payload.status === RequestStatus.REJECTED ||
+      payload.status === RequestStatus.RETURNED
+    ) {
+      newStatus = POStatus.DRAFT;
+    }
+
+    if (newStatus) {
+      const po = await this.prisma.purchaseOrder.findUnique({
+        where: { id: poId },
+      });
+      if (po) {
+        await this.prisma.purchaseOrder.update({
+          where: { id: poId },
+          data: { status: newStatus },
+        });
+
+        await this.prisma.auditLog.create({
+          data: {
+            companyId: po.companyId,
+            action: 'EVENT_UPDATE_PO_STATUS',
+            entity: 'PurchaseOrder',
+            entityId: poId,
+            details: { reason: 'Approval Engine Completed', status: newStatus },
+          },
+        });
+      }
+    }
   }
 }

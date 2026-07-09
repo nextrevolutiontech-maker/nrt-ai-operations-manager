@@ -4,13 +4,13 @@ This document represents the current, up-to-date state of the project.
 
 - **Project Name:** NRT AI Operations Manager
 - **Current Version:** 0.1.0-alpha
-- **Current Sprint:** Ready for Sprint 7
-- **Overall Progress:** ~37% (6 / 16 Sprints Completed)
+- **Current Sprint:** Ready for Sprint 8
+- **Overall Progress:** ~43% (7 / 16 Sprints Completed)
 - **Current Development Status:** Active Development
 - **Technology Stack:** NestJS, Next.js, Prisma, PostgreSQL, Turborepo, Swagger/OpenAPI
-- **Current Module:** Procurement (Sprint 6 - Completed)
-- **Next Module:** Sprint 7 (To be determined)
-- **Last Updated Date:** 2026-07-08
+- **Current Module:** Workflow & Approval Engine (Sprint 7 - Completed)
+- **Next Module:** Sprint 8 (To be determined)
+- **Last Updated Date:** 2026-07-09
 
 ## Completed Sprints
 - **Sprint 1:** Foundation
@@ -19,6 +19,7 @@ This document represents the current, up-to-date state of the project.
 - **Sprint 4:** Product Catalog
 - **Sprint 5:** Inventory & Warehouse
 - **Sprint 6:** Procurement
+- **Sprint 7:** Workflow & Approval Engine
 
 ## Major Features Completed
 - Monorepo infrastructure setup with Turborepo.
@@ -33,3 +34,5 @@ This document represents the current, up-to-date state of the project.
 - Supplier Management APIs with full CRUD and tracking.
 - Purchase Order APIs (Draft, Pending Approval, Approved, Partially Received, Completed, Cancelled).
 - Integrated Goods Receiving workflow generating transactional Inventory and StockMovement updates.
+- **Sprint 7:** Fully decoupled generic Workflow & Approval Engine handling single and multi-approver levels.
+- Event-driven architecture connecting generic approvals back to specific modules (e.g. Procurement).

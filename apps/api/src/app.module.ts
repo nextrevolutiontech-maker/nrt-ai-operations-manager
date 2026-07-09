@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -13,9 +14,12 @@ import { InventoriesModule } from './inventories/inventories.module';
 import { StockMovementsModule } from './stock-movements/stock-movements.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { WorkflowsModule } from './workflows/workflows.module';
+import { ApprovalsModule } from './approvals/approvals.module';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -28,6 +32,8 @@ import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
     StockMovementsModule,
     SuppliersModule,
     PurchaseOrdersModule,
+    WorkflowsModule,
+    ApprovalsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
