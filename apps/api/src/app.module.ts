@@ -19,6 +19,8 @@ import { ApprovalsModule } from './approvals/approvals.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { EventsModule } from './events/events.module';
+import { DashboardsModule } from './dashboards/dashboards.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { EventsModule } from './events/events.module';
     NotificationsModule,
     ActivitiesModule,
     EventsModule,
+    DashboardsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

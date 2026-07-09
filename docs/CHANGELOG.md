@@ -1,6 +1,14 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [Sprint 9] - Dashboard & Business Intelligence - 2026-07-09
+### Added
+- Created a robust schema-driven Dashboard Engine allowing users to define Dashboards and Dashboard Widgets via REST APIs.
+- Implemented Dynamic Analytics Aggregate APIs serving real-time statistics for KPI Summaries, Inventory, Procurement, Warehouses, Workflows, and Notifications.
+- Extracted and safely guarded analytics endpoints behind robust `JwtAuthGuard` and `PermissionsGuard` (RBAC) with complete Tenant Isolation.
+- Added comprehensive Swagger documentation across the `dashboards` and `analytics` modules.
+- Deployed system audit logging for `DASHBOARD_VIEWED` and `ANALYTICS_GENERATED` to trace executive-level data reads.
+
 ## [Sprint 8] - Notification & Event Center - 2026-07-09
 ### Added
 - Integrated `@nestjs/event-emitter` to serve as the unified internal communication bus across the system.

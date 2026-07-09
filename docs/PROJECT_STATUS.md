@@ -3,13 +3,13 @@
 This document represents the current, up-to-date state of the project.
 
 - **Project Name:** NRT AI Operations Manager
-- **Current Version:** 0.8.0
-- **Current Sprint:** Ready for Sprint 9
-- **Overall Progress:** 50% (8 / 16 Sprints Completed)
+- **Current Version:** 0.9.0
+- **Current Sprint:** Ready for Sprint 10
+- **Overall Progress:** 56% (9 / 16 Sprints Completed)
 - **Current Development Status:** Active Development
 - **Technology Stack:** NestJS, Next.js, Prisma, PostgreSQL, Turborepo, Swagger/OpenAPI
-- **Current Module:** Notification & Event Center (Sprint 8 - Completed)
-- **Next Module:** Sprint 9 (To be determined)
+- **Current Module:** Dashboard & Business Intelligence (Sprint 9 - Completed)
+- **Next Module:** Sprint 10 (To be determined)
 - **Last Updated Date:** 2026-07-09
 
 ## Completed Sprints
@@ -21,6 +21,7 @@ This document represents the current, up-to-date state of the project.
 - **Sprint 6:** Procurement
 - **Sprint 7:** Workflow & Approval Engine
 - **Sprint 8:** Notification & Event Center
+- **Sprint 9:** Dashboard & Business Intelligence
 
 ## Major Features Completed
 - Monorepo infrastructure setup with Turborepo.
@@ -37,4 +38,5 @@ This document represents the current, up-to-date state of the project.
 - Integrated Goods Receiving workflow generating transactional Inventory and StockMovement updates.
 - Fully decoupled generic Workflow & Approval Engine handling single and multi-approver levels.
 - Event-driven architecture connecting generic approvals back to specific modules (e.g. Procurement).
-- **Sprint 8:** Centralized Notification & Event Center using `@nestjs/event-emitter`. Includes `InApp` notification provider, robust Notification APIs, and an immutable generic Activity Feed logic with deep system integration.
+- Centralized Notification & Event Center using `@nestjs/event-emitter`. Includes `InApp` notification provider, robust Notification APIs, and an immutable generic Activity Feed logic with deep system integration.
+- **Sprint 9:** Dashboard & Business Intelligence engine. Exposes a dynamic, schema-driven dashboard/widget configuration system. Delivers highly-optimized backend analytical aggregate endpoints across Inventory, Procurement, Warehouses, Workflows, and Notifications.

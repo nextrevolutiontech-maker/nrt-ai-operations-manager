@@ -40,6 +40,7 @@ model Company {
   notifications  Notification[]
   workflows      Workflow[]
   approvalRequests ApprovalRequest[]
+  dashboards     Dashboard[]
 
   @@map("companies")
 }
@@ -693,4 +694,68 @@ model ApprovalHistory {
   @@index([requestId])
   @@index([userId])
   @@map("approval_histories")
+}
+
+// -----------------------------------------------------------------------------
+// DASHBOARD & BUSINESS INTELLIGENCE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum DashboardStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WidgetType {
+  KPI_CARD
+  LINE_CHART
+  BAR_CHART
+  PIE_CHART
+  TABLE
+  RECENT_ACTIVITIES
+  PENDING_APPROVALS
+  NOTIFICATION_SUMMARY
+}
+
+model Dashboard {
+  id          String          @id @default(uuid()) @db.Uuid
+  companyId   String          @map("company_id") @db.Uuid
+  name        String          @db.VarChar(255)
+  code        String          @db.VarChar(100)
+  module      String          @db.VarChar(100)
+  description String?         @db.Text
+  status      DashboardStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([module])
+  @@map("dashboards")
+}
+
+model DashboardWidget {
+  id          String     @id @default(uuid()) @db.Uuid
+  dashboardId String     @map("dashboard_id") @db.Uuid
+  type        WidgetType
+  title       String     @db.VarChar(255)
+  layout      Json       // Grid layout config (x, y, w, h)
+  config      Json       // Backend API endpoint and series mappings
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@map("dashboard_widgets")
 }

@@ -1,0 +1,268 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { AnalyticsFilterDto } from './dto/analytics-filter.dto';
+import {
+  RequestStatus,
+  POStatus,
+  SupplierStatus,
+} from '@nrt-ai-workforce/database';
+
+@Injectable()
+export class AnalyticsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getKpiSummary(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const [
+      totalProducts,
+      activeSuppliers,
+      totalWarehouses,
+      pendingPOs,
+      pendingApprovals,
+      unreadNotifications,
+    ] = await Promise.all([
+      this.prisma.product.count({ where: { companyId, deletedAt: null } }),
+      this.prisma.supplier.count({
+        where: { companyId, status: SupplierStatus.ACTIVE, deletedAt: null },
+      }),
+      this.prisma.warehouse.count({ where: { companyId, deletedAt: null } }),
+      this.prisma.purchaseOrder.count({
+        where: {
+          companyId,
+          status: POStatus.PENDING_APPROVAL,
+        },
+      }),
+      this.prisma.approvalRequest.count({
+        where: { companyId, status: RequestStatus.PENDING, deletedAt: null },
+      }),
+      this.prisma.notification.count({
+        where: { companyId, isRead: false, deletedAt: null },
+      }),
+    ]);
+
+    // Calculate total inventory value using aggregate
+    // Since availableStock is Decimal and cost is Decimal, we might need raw query or map in JS if dataset is small,
+    // but optimized way is to use prisma.$queryRaw for multiplication.
+    const inventoryValueResult = await this.prisma.$queryRaw<
+      Array<{ total_value: number }>
+    >`
+      SELECT SUM(i."available_stock" * p."cost") as total_value
+      FROM inventories i
+      JOIN products p ON i.product_id = p.id
+      WHERE i.company_id = ${companyId}::uuid
+    `;
+    const totalInventoryValue = inventoryValueResult[0]?.total_value || 0;
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'KPI_SUMMARY',
+    );
+
+    return {
+      totalProducts,
+      activeSuppliers,
+      totalWarehouses,
+      pendingPOs,
+      pendingApprovals,
+      unreadNotifications,
+      totalInventoryValue,
+    };
+  }
+
+  async getInventoryAnalytics(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const whereClause: any = { companyId };
+    if (query.warehouseId) {
+      whereClause.warehouseId = query.warehouseId;
+    }
+
+    const [outOfStock, lowStock, totalStock] = await Promise.all([
+      this.prisma.inventory.count({
+        where: { ...whereClause, availableStock: 0 },
+      }),
+      this.prisma.inventory.count({
+        where: {
+          ...whereClause,
+          availableStock: {
+            gt: 0,
+            lte: this.prisma.inventory.fields.minStockLevel,
+          },
+        },
+      }),
+      this.prisma.inventory.aggregate({
+        where: whereClause,
+        _sum: { availableStock: true },
+      }),
+    ]);
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'INVENTORY_ANALYTICS',
+    );
+
+    return {
+      outOfStock,
+      lowStock,
+      totalStockQuantity: totalStock._sum.availableStock || 0,
+    };
+  }
+
+  async getProcurementAnalytics(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const monthlyPurchasesResult = await this.prisma.$queryRaw<
+      Array<{ month: string; total: number }>
+    >`
+      SELECT DATE_TRUNC('month', "created_at") as month, SUM("grand_total") as total
+      FROM purchase_orders
+      WHERE company_id = ${companyId}::uuid AND status != 'CANCELLED'
+      GROUP BY month
+      ORDER BY month DESC
+      LIMIT 12
+    `;
+
+    const pendingPOs = await this.prisma.purchaseOrder.count({
+      where: {
+        companyId,
+        status: POStatus.PENDING_APPROVAL,
+      },
+    });
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'PROCUREMENT_ANALYTICS',
+    );
+
+    return {
+      monthlyPurchases: monthlyPurchasesResult,
+      pendingPOs,
+    };
+  }
+
+  async getWarehouseAnalytics(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const warehouses = await this.prisma.warehouse.findMany({
+      where: { companyId, deletedAt: null },
+      select: { id: true, name: true, location: true },
+    });
+
+    const utilization = await Promise.all(
+      warehouses.map(async (w) => {
+        const stats = await this.prisma.inventory.aggregate({
+          where: { companyId, warehouseId: w.id },
+          _count: { id: true, productId: true },
+          _sum: { availableStock: true },
+        });
+        return {
+          warehouseId: w.id,
+          warehouseName: w.name,
+          activeInventoryRecords: stats._count.id,
+          totalProducts: stats._count.productId,
+          totalStockQuantity: stats._sum.availableStock || 0,
+        };
+      }),
+    );
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'WAREHOUSE_ANALYTICS',
+    );
+
+    return {
+      totalWarehouses: warehouses.length,
+      utilization,
+    };
+  }
+
+  async getWorkflowAnalytics(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const [pending, approved, rejected] = await Promise.all([
+      this.prisma.approvalRequest.count({
+        where: { companyId, status: RequestStatus.PENDING, deletedAt: null },
+      }),
+      this.prisma.approvalRequest.count({
+        where: { companyId, status: RequestStatus.APPROVED, deletedAt: null },
+      }),
+      this.prisma.approvalRequest.count({
+        where: { companyId, status: RequestStatus.REJECTED, deletedAt: null },
+      }),
+    ]);
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'WORKFLOW_ANALYTICS',
+    );
+
+    return {
+      pendingApprovals: pending,
+      approvedRequests: approved,
+      rejectedRequests: rejected,
+    };
+  }
+
+  async getNotificationAnalytics(
+    companyId: string,
+    userId: string,
+    query: AnalyticsFilterDto,
+  ) {
+    const [unread, total] = await Promise.all([
+      this.prisma.notification.count({
+        where: { companyId, isRead: false, deletedAt: null },
+      }),
+      this.prisma.notification.count({ where: { companyId, deletedAt: null } }),
+    ]);
+
+    await this.logAudit(
+      companyId,
+      userId,
+      'ANALYTICS_GENERATED',
+      'NOTIFICATION_ANALYTICS',
+    );
+
+    return {
+      unreadNotifications: unread,
+      totalNotifications: total,
+    };
+  }
+
+  private async logAudit(
+    companyId: string,
+    userId: string,
+    action: string,
+    entityId: string,
+  ) {
+    await this.prisma.auditLog.create({
+      data: {
+        companyId,
+        userId,
+        action,
+        entity: 'Analytics',
+        entityId,
+      },
+    });
+  }
+}
