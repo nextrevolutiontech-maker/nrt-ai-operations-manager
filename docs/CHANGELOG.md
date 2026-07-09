@@ -1,6 +1,15 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [Sprint 8] - Notification & Event Center - 2026-07-09
+### Added
+- Integrated `@nestjs/event-emitter` to serve as the unified internal communication bus across the system.
+- Created `NotificationsModule` providing CRUD APIs, multi-status types (INFO, SUCCESS, ERROR, WARNING) and priority levels.
+- Designed `NotificationProvider` generic architecture and implemented `InAppNotificationProvider`.
+- Built an immutable `ActivitiesModule` serving centralized user and system activity feeds.
+- Automated system notifications and activities for Goods Receipt, Order Approval, Stock Warnings, and Data Creation events.
+- Emitted audit logs globally via wildcards whenever domain events trigger.
+
 
 ## [Sprint 7] - Workflow & Approval Engine - 2026-07-09
 ### Added

@@ -3,13 +3,13 @@
 This document represents the current, up-to-date state of the project.
 
 - **Project Name:** NRT AI Operations Manager
-- **Current Version:** 0.7.0
-- **Current Sprint:** Ready for Sprint 8
-- **Overall Progress:** ~43% (7 / 16 Sprints Completed)
+- **Current Version:** 0.8.0
+- **Current Sprint:** Ready for Sprint 9
+- **Overall Progress:** 50% (8 / 16 Sprints Completed)
 - **Current Development Status:** Active Development
 - **Technology Stack:** NestJS, Next.js, Prisma, PostgreSQL, Turborepo, Swagger/OpenAPI
-- **Current Module:** Workflow & Approval Engine (Sprint 7 - Completed)
-- **Next Module:** Sprint 8 (To be determined)
+- **Current Module:** Notification & Event Center (Sprint 8 - Completed)
+- **Next Module:** Sprint 9 (To be determined)
 - **Last Updated Date:** 2026-07-09
 
 ## Completed Sprints
@@ -20,6 +20,7 @@ This document represents the current, up-to-date state of the project.
 - **Sprint 5:** Inventory & Warehouse
 - **Sprint 6:** Procurement
 - **Sprint 7:** Workflow & Approval Engine
+- **Sprint 8:** Notification & Event Center
 
 ## Major Features Completed
 - Monorepo infrastructure setup with Turborepo.
@@ -34,5 +35,6 @@ This document represents the current, up-to-date state of the project.
 - Supplier Management APIs with full CRUD and tracking.
 - Purchase Order APIs (Draft, Pending Approval, Approved, Partially Received, Completed, Cancelled).
 - Integrated Goods Receiving workflow generating transactional Inventory and StockMovement updates.
-- **Sprint 7:** Fully decoupled generic Workflow & Approval Engine handling single and multi-approver levels.
+- Fully decoupled generic Workflow & Approval Engine handling single and multi-approver levels.
 - Event-driven architecture connecting generic approvals back to specific modules (e.g. Procurement).
+- **Sprint 8:** Centralized Notification & Event Center using `@nestjs/event-emitter`. Includes `InApp` notification provider, robust Notification APIs, and an immutable generic Activity Feed logic with deep system integration.

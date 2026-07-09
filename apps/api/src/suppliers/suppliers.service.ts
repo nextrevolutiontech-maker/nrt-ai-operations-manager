@@ -9,10 +9,14 @@ import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { PaginationQueryDto } from '../common/dto/pagination.dto';
 import { SupplierStatus } from '@nrt-ai-workforce/database';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class SuppliersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(
     companyId: string,
@@ -54,6 +58,13 @@ export class SuppliersService {
           entityId: supplier.id,
           details: { name: supplier.name },
         },
+      });
+
+      this.eventEmitter.emit('supplier.created', {
+        companyId,
+        userId,
+        entityId: supplier.id,
+        supplierName: supplier.name,
       });
 
       return supplier;

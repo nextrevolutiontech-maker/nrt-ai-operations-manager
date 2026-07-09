@@ -16,13 +16,14 @@ import {
   RequestStatus,
 } from '@nrt-ai-workforce/database';
 import { ApprovalsService } from '../approvals/approvals.service';
-import { OnEvent } from '@nestjs/event-emitter';
+import { OnEvent, EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PurchaseOrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly approvalsService: ApprovalsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private async generatePurchaseNumber(
@@ -448,6 +449,22 @@ export class PurchaseOrdersService {
             details: { reason: 'Approval Engine Completed', status: newStatus },
           },
         });
+
+        if (newStatus === POStatus.APPROVED) {
+          this.eventEmitter.emit('purchase.approved', {
+            companyId: po.companyId,
+            userId: po.createdBy,
+            entityId: po.id,
+            orderNumber: po.orderNumber,
+          });
+        } else if (payload.status === RequestStatus.REJECTED) {
+          this.eventEmitter.emit('purchase.rejected', {
+            companyId: po.companyId,
+            userId: po.createdBy,
+            entityId: po.id,
+            orderNumber: po.orderNumber,
+          });
+        }
       }
     }
   }

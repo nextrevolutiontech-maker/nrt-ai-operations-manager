@@ -68,6 +68,23 @@ export class ApprovalsService {
       'APPROVAL_REQUESTED',
       request.id,
     );
+
+    const firstLevel = workflow.levels.find((l) => l.levelNumber === 1);
+    if (firstLevel) {
+      const roleUsers = await this.prisma.userRole.findMany({
+        where: { roleId: firstLevel.roleId },
+      });
+      roleUsers.forEach((ru) => {
+        this.eventEmitter.emit('workflow.assigned', {
+          companyId,
+          userId: ru.userId,
+          entityId: request.id,
+          entityType,
+          requestTitle: `${entityType} - ${entityId}`,
+        });
+      });
+    }
+
     return request;
   }
 
@@ -262,6 +279,42 @@ export class ApprovalsService {
         entityId: request.entityId,
         status: newStatus,
       });
+
+      if (newStatus === RequestStatus.APPROVED) {
+        this.eventEmitter.emit('workflow.approved', {
+          companyId,
+          userId: request.requestedBy,
+          entityId: request.id,
+          entityType: request.entityType,
+          requestTitle: `${request.entityType} - ${request.entityId}`,
+        });
+      } else if (newStatus === RequestStatus.REJECTED) {
+        this.eventEmitter.emit('workflow.rejected', {
+          companyId,
+          userId: request.requestedBy,
+          entityId: request.id,
+          entityType: request.entityType,
+          requestTitle: `${request.entityType} - ${request.entityId}`,
+        });
+      }
+    } else if (nextLevel > request.currentLevel) {
+      const nextLevelInfo = request.workflow.levels.find(
+        (l) => l.levelNumber === nextLevel,
+      );
+      if (nextLevelInfo) {
+        const roleUsers = await this.prisma.userRole.findMany({
+          where: { roleId: nextLevelInfo.roleId },
+        });
+        roleUsers.forEach((ru) => {
+          this.eventEmitter.emit('workflow.assigned', {
+            companyId,
+            userId: ru.userId,
+            entityId: request.id,
+            entityType: request.entityType,
+            requestTitle: `${request.entityType} - ${request.entityId}`,
+          });
+        });
+      }
     }
 
     return updatedRequest;

@@ -511,17 +511,33 @@ model AuditLog {
 model ActivityLog {
   id        String @id @default(uuid()) @db.Uuid
   companyId String @map("company_id") @db.Uuid
-  userId    String @map("user_id") @db.Uuid
+  userId    String? @map("user_id") @db.Uuid
   action    String @db.VarChar(255)
+  entityType String? @map("entity_type") @db.VarChar(100)
+  entityId   String? @map("entity_id") @db.Uuid
   metadata  Json?
 
   createdAt DateTime @default(now()) @map("created_at") // IMMUTABLE
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  @@index([companyId])
-  @@index([userId])
+  @@index([companyId, userId, createdAt])
+  @@index([entityType, entityId])
   @@map("activity_logs")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 model Notification {
@@ -530,17 +546,23 @@ model Notification {
   userId    String  @map("user_id") @db.Uuid
   title     String  @db.VarChar(255)
   message   String  @db.Text
+  type      NotificationType @default(INFO)
+  priority  PriorityLevel    @default(MEDIUM)
+  module    String?          @db.VarChar(100)
+  entityType String?         @map("entity_type") @db.VarChar(100)
+  entityId   String?         @map("entity_id") @db.Uuid
   isRead    Boolean @default(false) @map("is_read")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
   createdBy String?  @map("created_by") @db.Uuid
   updatedBy String?  @map("updated_by") @db.Uuid
 
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  @@index([companyId])
-  @@index([userId])
+  @@index([companyId, userId, type, priority, isRead, createdAt])
+  @@index([entityType, entityId])
   @@map("notifications")
 }
 

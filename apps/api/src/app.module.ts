@@ -16,10 +16,13 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { WorkflowsModule } from './workflows/workflows.module';
 import { ApprovalsModule } from './approvals/approvals.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
-    EventEmitterModule.forRoot(),
+    EventEmitterModule.forRoot({ wildcard: true }),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -34,6 +37,9 @@ import { ApprovalsModule } from './approvals/approvals.module';
     PurchaseOrdersModule,
     WorkflowsModule,
     ApprovalsModule,
+    NotificationsModule,
+    ActivitiesModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

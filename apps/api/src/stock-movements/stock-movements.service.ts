@@ -9,10 +9,14 @@ import { CreateMovementDto } from './dto/create-movement.dto';
 import { MovementFilterDto } from './dto/movement-filter.dto';
 import { PaginatedResultDto } from '../common/dto/paginated-result.dto';
 import { MovementType, Prisma } from '@nrt-ai-workforce/database';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class StockMovementsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(companyId: string, userId: string, dto: CreateMovementDto) {
     if (dto.type === MovementType.TRANSFER_OUT && !dto.targetWarehouseId) {
@@ -107,6 +111,28 @@ export class StockMovementsService {
           throw new ConflictException(
             `Concurrency conflict detected for warehouse ${warehouseId}. Please try again.`,
           );
+        }
+
+        // Fire events
+        if (newStock === 0 && previousStock > 0) {
+          this.eventEmitter.emit('inventory.out_of_stock', {
+            companyId,
+            userId,
+            entityId: inventory.id,
+            productName: product.name,
+          });
+        } else if (
+          newStock > 0 &&
+          newStock <= Number(inventory.minStockLevel) &&
+          previousStock > Number(inventory.minStockLevel)
+        ) {
+          this.eventEmitter.emit('inventory.low', {
+            companyId,
+            userId,
+            entityId: inventory.id,
+            productName: product.name,
+            available: newStock,
+          });
         }
 
         // Create immutable ledger

@@ -9,10 +9,14 @@ import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 import { WarehouseFilterDto } from './dto/warehouse-filter.dto';
 import { PaginatedResultDto } from '../common/dto/paginated-result.dto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class WarehousesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(
     companyId: string,
@@ -42,6 +46,14 @@ export class WarehousesService {
       warehouse.id,
       createWarehouseDto,
     );
+
+    this.eventEmitter.emit('warehouse.created', {
+      companyId,
+      userId,
+      entityId: warehouse.id,
+      warehouseName: warehouse.name,
+    });
+
     return warehouse;
   }
 

@@ -10,9 +10,9 @@ This roadmap tracks the complete development lifecycle of the NRT AI Operations 
 - **Sprint 4 — Product Catalog** ✅
 - **Sprint 5 — Inventory & Warehouse** ✅
 - **Sprint 6 — Procurement** ✅
-- **Sprint 7 — Stock Movements / Approvals** ✅
-- **Sprint 8 — Workflow Engine / Next Module** 🔄 *(Current / Next)*
-- **Sprint 9 — Notifications** ⏳ *(Upcoming)*
+- **Sprint 7 — Workflow Engine & Approvals** ✅
+- **Sprint 8 — Notification & Event Center** ✅
+- **Sprint 9 — Next Module** 🔄 *(Current / Next)*
 - **Sprint 10 — Dashboard & Analytics** ⏳ *(Upcoming)*
 - **Sprint 11 — Reports & Export** ⏳ *(Upcoming)*
 - **Sprint 12 — File & Document Management** ⏳ *(Upcoming)*
