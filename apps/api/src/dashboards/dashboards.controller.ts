@@ -52,7 +52,11 @@ export class DashboardsController {
   @Patch(':id')
   @Permissions('update:dashboard')
   @ApiOperation({ summary: 'Update a dashboard' })
-  update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateDashboardDto) {
+  update(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: UpdateDashboardDto,
+  ) {
     return this.dashboardsService.update(
       req.user.companyId,
       id,
@@ -71,7 +75,11 @@ export class DashboardsController {
   @Post(':id/widgets')
   @Permissions('update:dashboard')
   @ApiOperation({ summary: 'Add a widget to a dashboard' })
-  addWidget(@Req() req: any, @Param('id') id: string, @Body() dto: CreateWidgetDto) {
+  addWidget(
+    @Req() req: any,
+    @Param('id') id: string,
+    @Body() dto: CreateWidgetDto,
+  ) {
     return this.dashboardsService.addWidget(
       req.user.companyId,
       id,

@@ -21,6 +21,8 @@ import { ActivitiesModule } from './activities/activities.module';
 import { EventsModule } from './events/events.module';
 import { DashboardsModule } from './dashboards/dashboards.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ExportsModule } from './exports/exports.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -44,6 +46,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
     EventsModule,
     DashboardsModule,
     AnalyticsModule,
+    ExportsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

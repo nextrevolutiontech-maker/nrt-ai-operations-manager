@@ -28,34 +28,53 @@ export class AnalyticsController {
   @Permissions('read:analytics')
   @ApiOperation({ summary: 'Get inventory analytics' })
   getInventoryAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
-    return this.analyticsService.getInventoryAnalytics(req.user.companyId, req.user.id, query);
+    return this.analyticsService.getInventoryAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
   }
 
   @Get('procurement')
   @Permissions('read:analytics')
   @ApiOperation({ summary: 'Get procurement analytics' })
   getProcurementAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
-    return this.analyticsService.getProcurementAnalytics(req.user.companyId, req.user.id, query);
+    return this.analyticsService.getProcurementAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
   }
 
   @Get('warehouses')
   @Permissions('read:analytics')
   @ApiOperation({ summary: 'Get warehouse analytics' })
   getWarehouseAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
-    return this.analyticsService.getWarehouseAnalytics(req.user.companyId, req.user.id, query);
+    return this.analyticsService.getWarehouseAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
   }
 
   @Get('workflows')
   @Permissions('read:analytics')
   @ApiOperation({ summary: 'Get workflow analytics' })
   getWorkflowAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
-    return this.analyticsService.getWorkflowAnalytics(req.user.companyId, req.user.id, query);
+    return this.analyticsService.getWorkflowAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
   }
 
   @Get('notifications')
   @Permissions('read:analytics')
   @ApiOperation({ summary: 'Get notification analytics' })
-  getNotificationAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
+  getNotificationAnalytics(
+    @Req() req: any,
+    @Query() query: AnalyticsFilterDto,
+  ) {
     return this.analyticsService.getNotificationAnalytics(
       req.user.companyId,
       req.user.id,

@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.10.0] - 2026-07-09
+### Added
+- Reports & Export Engine
+- Export Providers (PDF, CSV, Excel)
+- Dynamic Report Generation
+- Report Templates Data Seeding
+
 All notable changes to this project will be documented in this file.
 ## [Sprint 9] - Dashboard & Business Intelligence - 2026-07-09
 ### Added
