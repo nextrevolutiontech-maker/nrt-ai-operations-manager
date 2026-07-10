@@ -1,5 +1,12 @@
 # Changelog
 
+## [v0.11.0] - 2026-07-10
+### Added
+- Sales & Order Management Module
+- Customer CRM functionality
+- Sales Order processing with atomic Goods Issue transactions
+- Domain Event publishing for Sales Operations
+
 ## [v0.10.0] - 2026-07-09
 ### Added
 - Reports & Export Engine

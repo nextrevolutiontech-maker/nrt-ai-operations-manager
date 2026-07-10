@@ -42,6 +42,8 @@ model Company {
   approvalRequests ApprovalRequest[]
   dashboards       Dashboard[]
   reports          Report[]
+  customers        Customer[]
+  salesOrders      SalesOrder[]
 
   @@map("companies")
 }
@@ -261,13 +263,14 @@ model Product {
   createdBy String?   @map("created_by") @db.Uuid
   updatedBy String?   @map("updated_by") @db.Uuid
 
-  company       Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  brand         Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  unit          Unit            @relation(fields: [unitId], references: [id], onDelete: Restrict)
-  inventories   Inventory[]
-  movements     StockMovement[]
-  purchaseItems PurchaseItem[]
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category        Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand           Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  unit            Unit             @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  inventories     Inventory[]
+  movements       StockMovement[]
+  purchaseItems   PurchaseItem[]
+  salesOrderItems SalesOrderItem[]
 
   @@unique([companyId, sku])
   @@unique([companyId, barcode])
@@ -304,6 +307,7 @@ model Warehouse {
   inventories    Inventory[]
   movements      StockMovement[]
   purchaseOrders PurchaseOrder[]
+  salesOrders    SalesOrder[]
 
   @@unique([companyId, name])
   @@index([companyId])
@@ -354,6 +358,7 @@ enum MovementType {
   DAMAGE
   RETURN_IN
   RETURN_OUT
+  SALE_OUT
 }
 
 model StockMovement {
@@ -810,4 +815,108 @@ model DashboardWidget {
 
   @@index([dashboardId])
   @@map("dashboard_widgets")
+}
+
+// -----------------------------------------------------------------------------
+// SALES & ORDER MANAGEMENT DOMAIN
+// -----------------------------------------------------------------------------
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Customer {
+  id            String         @id @default(uuid()) @db.Uuid
+  companyId     String         @map("company_id") @db.Uuid
+  companyName   String         @map("company_name") @db.VarChar(255)
+  contactPerson String?        @map("contact_person") @db.VarChar(255)
+  email         String?        @db.VarChar(255)
+  phone         String?        @db.VarChar(50)
+  mobile        String?        @db.VarChar(50)
+  taxNumber     String?        @map("tax_number") @db.VarChar(100)
+  address       String?        @db.Text
+  city          String?        @db.VarChar(100)
+  country       String?        @db.VarChar(100)
+  creditLimit   Decimal?       @map("credit_limit") @db.Decimal(15, 2)
+  paymentTerms  String?        @map("payment_terms") @db.VarChar(100)
+  notes         String?        @db.Text
+  status        CustomerStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salesOrders SalesOrder[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("customers")
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model SalesOrder {
+  id           String           @id @default(uuid()) @db.Uuid
+  companyId    String           @map("company_id") @db.Uuid
+  customerId   String           @map("customer_id") @db.Uuid
+  warehouseId  String           @map("warehouse_id") @db.Uuid
+  salesNumber  String           @unique @map("sales_number") @db.VarChar(100)
+  orderDate    DateTime         @map("order_date")
+  deliveryDate DateTime?        @map("delivery_date")
+  status       SalesOrderStatus @default(DRAFT)
+  notes        String?          @db.Text
+
+  totalAmount Decimal @default(0) @map("total_amount") @db.Decimal(15, 2)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer  Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  items SalesOrderItem[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([deliveryDate])
+  @@map("sales_orders")
+}
+
+model SalesOrderItem {
+  id           String @id @default(uuid()) @db.Uuid
+  salesOrderId String @map("sales_order_id") @db.Uuid
+  productId    String @map("product_id") @db.Uuid
+
+  quantity  Decimal @db.Decimal(10, 2)
+  unitPrice Decimal @map("unit_price") @db.Decimal(15, 2)
+  discount  Decimal @default(0) @db.Decimal(5, 2) // %
+  tax       Decimal @default(0) @db.Decimal(5, 2) // %
+  total     Decimal @db.Decimal(15, 2)
+
+  deliveredQty Decimal @default(0) @map("delivered_qty") @db.Decimal(10, 2)
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([salesOrderId])
+  @@index([productId])
+  @@map("sales_order_items")
 }

@@ -23,6 +23,8 @@ import { DashboardsModule } from './dashboards/dashboards.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { ExportsModule } from './exports/exports.module';
 import { ReportsModule } from './reports/reports.module';
+import { CustomersModule } from './customers/customers.module';
+import { SalesOrdersModule } from './sales-orders/sales-orders.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { ReportsModule } from './reports/reports.module';
     AnalyticsModule,
     ExportsModule,
     ReportsModule,
+    CustomersModule,
+    SalesOrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
