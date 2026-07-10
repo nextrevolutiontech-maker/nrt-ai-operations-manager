@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.13.0] - 2026-07-10
+### Added
+- Admin Web Portal frontend powered by Next.js
+- Vercel/Linear style Dark/Light UI
+- TanStack Query data synchronization
+- Role-based Protected Route wrappers
+- Universal generic CRUD Data Tables and Modals
+
 ## [v0.12.0] - 2026-07-10
 ### Added
 - Finance Foundation Module
