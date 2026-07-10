@@ -23,29 +23,31 @@ model Company {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   // Relations
-  users            User[]
-  roles            Role[]
-  permissions      Permission[]
-  categories       Category[]
-  brands           Brand[]
-  units            Unit[]
-  products         Product[]
-  warehouses       Warehouse[]
-  inventories      Inventory[]
-  stockMovements   StockMovement[]
-  suppliers        Supplier[]
-  purchaseOrders   PurchaseOrder[]
-  auditLogs        AuditLog[]
-  activityLogs     ActivityLog[]
-  notifications    Notification[]
-  workflows        Workflow[]
-  approvalRequests ApprovalRequest[]
-  dashboards       Dashboard[]
-  reports          Report[]
-  customers        Customer[]
-  salesOrders      SalesOrder[]
-  accounts         Account[]
-  journals         Journal[]
+  users             User[]
+  roles             Role[]
+  permissions       Permission[]
+  categories        Category[]
+  brands            Brand[]
+  units             Unit[]
+  products          Product[]
+  warehouses        Warehouse[]
+  inventories       Inventory[]
+  stockMovements    StockMovement[]
+  suppliers         Supplier[]
+  purchaseOrders    PurchaseOrder[]
+  auditLogs         AuditLog[]
+  activityLogs      ActivityLog[]
+  notifications     Notification[]
+  workflows         Workflow[]
+  approvalRequests  ApprovalRequest[]
+  dashboards        Dashboard[]
+  reports           Report[]
+  customers         Customer[]
+  salesOrders       SalesOrder[]
+  accounts          Account[]
+  journals          Journal[]
+  aiSessions        AiSession[]
+  aiPromptTemplates AiPromptTemplate[]
 
   @@map("companies")
 }
@@ -65,9 +67,11 @@ model User {
   createdBy String?   @map("created_by") @db.Uuid
   updatedBy String?   @map("updated_by") @db.Uuid
 
-  company   Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
-  userRoles UserRole[]
-  sessions  Session[]
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  userRoles         UserRole[]
+  sessions          Session[]
+  aiSessions        AiSession[]
+  aiActionApprovals AiActionApproval[]
 
   @@unique([companyId, email])
   @@index([companyId])
@@ -1012,4 +1016,87 @@ model JournalEntry {
   @@index([journalId])
   @@index([accountId])
   @@map("journal_entries")
+}
+
+// --- AI ORCHESTRATION ---
+
+enum AiMessageRole {
+  USER
+  AI
+  SYSTEM
+}
+
+enum AiSessionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AiActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+}
+
+model AiSession {
+  id        String          @id @default(uuid())
+  companyId String
+  userId    String
+  status    AiSessionStatus @default(ACTIVE)
+  title     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  company  Company     @relation(fields: [companyId], references: [id])
+  user     User        @relation(fields: [userId], references: [id])
+  messages AiMessage[]
+
+  @@map("ai_sessions")
+}
+
+model AiMessage {
+  id        String        @id @default(uuid())
+  sessionId String
+  role      AiMessageRole
+  content   String        @db.Text
+  tokens    Int?
+  createdAt DateTime      @default(now())
+
+  session   AiSession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  approvals AiActionApproval[]
+
+  @@map("ai_messages")
+}
+
+model AiActionApproval {
+  id         String         @id @default(uuid())
+  messageId  String
+  actionType String
+  payload    Json
+  status     AiActionStatus @default(PENDING)
+  approvedBy String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  message  AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  approver User?     @relation(fields: [approvedBy], references: [id])
+
+  @@map("ai_action_approvals")
+}
+
+model AiPromptTemplate {
+  id          String   @id @default(uuid())
+  companyId   String
+  code        String   @unique
+  name        String
+  description String?
+  content     String   @db.Text
+  variables   Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("ai_prompt_templates")
 }

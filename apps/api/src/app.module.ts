@@ -28,6 +28,7 @@ import { SalesOrdersModule } from './sales-orders/sales-orders.module';
 import { AccountsModule } from './accounts/accounts.module';
 import { JournalsModule } from './journals/journals.module';
 import { LedgerModule } from './ledger/ledger.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { LedgerModule } from './ledger/ledger.module';
     AccountsModule,
     JournalsModule,
     LedgerModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

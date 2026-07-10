@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.14.0] - 2026-07-10
+### Added
+- AI Command Center module
+- Centralized AI Orchestrator service
+- Dynamic Tool Registry gated by RBAC
+- AI Action Approval workflow
+- AiContextEngine for injecting user metadata into prompts
+- AiSession, AiMessage, AiActionApproval, AiPromptTemplate models
+
 ## [v0.13.0] - 2026-07-10
 ### Added
 - Admin Web Portal frontend powered by Next.js
