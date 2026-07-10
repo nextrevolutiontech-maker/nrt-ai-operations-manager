@@ -44,6 +44,8 @@ model Company {
   reports          Report[]
   customers        Customer[]
   salesOrders      SalesOrder[]
+  accounts         Account[]
+  journals         Journal[]
 
   @@map("companies")
 }
@@ -919,4 +921,95 @@ model SalesOrderItem {
   @@index([salesOrderId])
   @@index([productId])
   @@map("sales_order_items")
+}
+
+// -----------------------------------------------------------------------------
+// FINANCE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Account {
+  id          String        @id @default(uuid()) @db.Uuid
+  companyId   String        @map("company_id") @db.Uuid
+  parentId    String?       @map("parent_id") @db.Uuid
+  accountCode String        @map("account_code") @db.VarChar(50)
+  accountName String        @map("account_name") @db.VarChar(255)
+  accountType AccountType   @map("account_type")
+  description String?       @db.Text
+  status      AccountStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parent   Account?  @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Account[] @relation("AccountHierarchy")
+
+  journalEntries JournalEntry[]
+
+  @@unique([companyId, accountCode])
+  @@index([companyId])
+  @@index([accountType])
+  @@index([status])
+  @@map("accounts")
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+}
+
+model Journal {
+  id            String        @id @default(uuid()) @db.Uuid
+  companyId     String        @map("company_id") @db.Uuid
+  journalNumber String        @unique @map("journal_number") @db.VarChar(100)
+  referenceType String?       @map("reference_type") @db.VarChar(100)
+  referenceId   String?       @map("reference_id") @db.VarChar(100)
+  postingDate   DateTime      @map("posting_date")
+  description   String?       @db.Text
+  status        JournalStatus @default(DRAFT)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entries JournalEntry[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([postingDate])
+  @@map("journals")
+}
+
+model JournalEntry {
+  id          String  @id @default(uuid()) @db.Uuid
+  journalId   String  @map("journal_id") @db.Uuid
+  accountId   String  @map("account_id") @db.Uuid
+  debit       Decimal @default(0) @db.Decimal(15, 2)
+  credit      Decimal @default(0) @db.Decimal(15, 2)
+  description String? @db.Text
+
+  journal Journal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([journalId])
+  @@index([accountId])
+  @@map("journal_entries")
 }

@@ -25,6 +25,9 @@ import { ExportsModule } from './exports/exports.module';
 import { ReportsModule } from './reports/reports.module';
 import { CustomersModule } from './customers/customers.module';
 import { SalesOrdersModule } from './sales-orders/sales-orders.module';
+import { AccountsModule } from './accounts/accounts.module';
+import { JournalsModule } from './journals/journals.module';
+import { LedgerModule } from './ledger/ledger.module';
 
 @Module({
   imports: [
@@ -52,6 +55,9 @@ import { SalesOrdersModule } from './sales-orders/sales-orders.module';
     ReportsModule,
     CustomersModule,
     SalesOrdersModule,
+    AccountsModule,
+    JournalsModule,
+    LedgerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

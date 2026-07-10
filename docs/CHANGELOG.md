@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.12.0] - 2026-07-10
+### Added
+- Finance Foundation Module
+- Chart of Accounts Management
+- General Ledger and dynamic Running Balances
+- Generic Financial Posting Engine
+- Double-entry accounting validations
+
 ## [v0.11.0] - 2026-07-10
 ### Added
 - Sales & Order Management Module
