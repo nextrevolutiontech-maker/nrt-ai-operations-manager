@@ -11,7 +11,7 @@ import {
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
-  catch(exception: unknown, host: ArgumentsHost) {
+  catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const request = ctx.getRequest();
@@ -24,12 +24,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const message =
       exception instanceof HttpException
         ? exception.getResponse()
-        : 'Internal server error';
+        : exception.message || 'Internal server error';
 
     // Log the exception securely
     this.logger.error(
       `[${request.method}] ${request.url} - Status: ${status}`,
-      exception,
+      exception.stack || exception,
     );
 
     // Provide a generic response structure
@@ -42,6 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         typeof message === 'string'
           ? message
           : (message as any).message || message,
+      details: exception.stack ? exception.stack.split('\n')[0] : String(exception)
     });
   }
 }

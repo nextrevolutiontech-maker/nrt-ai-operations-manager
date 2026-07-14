@@ -1,0 +1,1103 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------------
+// CORE DOMAIN
+// -----------------------------------------------------------------------------
+
+model Company {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @db.VarChar(255)
+  slug String @unique @db.VarChar(255)
+
+  // Standard fields
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  // Relations
+  users             User[]
+  roles             Role[]
+  permissions       Permission[]
+  categories        Category[]
+  brands            Brand[]
+  units             Unit[]
+  products          Product[]
+  warehouses        Warehouse[]
+  inventories       Inventory[]
+  stockMovements    StockMovement[]
+  suppliers         Supplier[]
+  purchaseOrders    PurchaseOrder[]
+  auditLogs         AuditLog[]
+  activityLogs      ActivityLog[]
+  notifications     Notification[]
+  workflows         Workflow[]
+  approvalRequests  ApprovalRequest[]
+  dashboards        Dashboard[]
+  reports           Report[]
+  customers         Customer[]
+  salesOrders       SalesOrder[]
+  accounts          Account[]
+  journals          Journal[]
+  aiSessions        AiSession[]
+  aiPromptTemplates AiPromptTemplate[]
+
+  @@map("companies")
+}
+
+model User {
+  id           String  @id @default(uuid()) @db.Uuid
+  companyId    String  @map("company_id") @db.Uuid
+  email        String  @db.VarChar(255)
+  passwordHash String  @map("password_hash") @db.VarChar(255)
+  firstName    String  @map("first_name") @db.VarChar(100)
+  lastName     String  @map("last_name") @db.VarChar(100)
+  isActive     Boolean @default(true) @map("is_active")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company           Company            @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  userRoles         UserRole[]
+  sessions          Session[]
+  aiSessions        AiSession[]
+  aiActionApprovals AiActionApproval[]
+
+  @@unique([companyId, email])
+  @@index([companyId])
+  @@map("users")
+}
+
+model Role {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String  @map("company_id") @db.Uuid
+  name        String  @db.VarChar(100)
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+  approvalLevels  ApprovalLevel[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("roles")
+}
+
+model Permission {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String? @map("company_id") @db.Uuid // null means system-level global permission
+  name        String  @db.VarChar(100) // e.g. "inventory:read"
+  description String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company         Company?         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  rolePermissions RolePermission[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("permissions")
+}
+
+model UserRole {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String @id @default(uuid()) @db.Uuid
+  roleId       String @map("role_id") @db.Uuid
+  permissionId String @map("permission_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by") @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model Session {
+  id                 String    @id @default(uuid()) @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  hashedRefreshToken String    @map("hashed_refresh_token") @db.Text
+  deviceInfo         String?   @map("device_info") @db.Text
+  ipAddress          String?   @map("ip_address") @db.VarChar(45)
+  userAgent          String?   @map("user_agent") @db.Text
+  expiresAt          DateTime  @map("expires_at")
+  lastUsedAt         DateTime  @default(now()) @map("last_used_at")
+  revokedAt          DateTime? @map("revoked_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// -----------------------------------------------------------------------------
+// PRODUCT CATALOG DOMAIN
+// -----------------------------------------------------------------------------
+
+model Category {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String  @map("company_id") @db.Uuid
+  parentId    String? @map("parent_id") @db.Uuid
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company     Company    @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  subCategory Category[] @relation("CategoryHierarchy")
+  products    Product[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Brand {
+  id          String  @id @default(uuid()) @db.Uuid
+  companyId   String  @map("company_id") @db.Uuid
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("brands")
+}
+
+model Unit {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String? @map("company_id") @db.Uuid // null = global system unit
+  name      String  @db.VarChar(100) // e.g., "Kilogram"
+  symbol    String  @db.VarChar(20) // e.g., "kg"
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company?  @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([companyId, symbol])
+  @@index([companyId])
+  @@map("units")
+}
+
+model Product {
+  id            String        @id @default(uuid()) @db.Uuid
+  companyId     String        @map("company_id") @db.Uuid
+  categoryId    String?       @map("category_id") @db.Uuid
+  brandId       String?       @map("brand_id") @db.Uuid
+  unitId        String        @map("unit_id") @db.Uuid
+  sku           String        @db.VarChar(100)
+  barcode       String?       @db.VarChar(255)
+  name          String        @db.VarChar(255)
+  description   String?       @db.Text
+  price         Decimal       @db.Decimal(10, 2)
+  cost          Decimal       @db.Decimal(10, 2)
+  minStockLevel Decimal       @default(0) @db.Decimal(10, 2)
+  maxStockLevel Decimal?      @db.Decimal(10, 2)
+  reorderLevel  Decimal       @default(0) @db.Decimal(10, 2)
+  imageUrl      String?       @db.Text
+  notes         String?       @db.Text
+  tags          String[]
+  status        ProductStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  category        Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand           Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  unit            Unit             @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  inventories     Inventory[]
+  movements       StockMovement[]
+  purchaseItems   PurchaseItem[]
+  salesOrderItems SalesOrderItem[]
+
+  @@unique([companyId, sku])
+  @@unique([companyId, barcode])
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([unitId])
+  @@map("products")
+}
+
+// -----------------------------------------------------------------------------
+// INVENTORY DOMAIN
+// -----------------------------------------------------------------------------
+
+enum WarehouseStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Warehouse {
+  id        String          @id @default(uuid()) @db.Uuid
+  companyId String          @map("company_id") @db.Uuid
+  name      String          @db.VarChar(255)
+  location  String?         @db.VarChar(255)
+  status    WarehouseStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  inventories    Inventory[]
+  movements      StockMovement[]
+  purchaseOrders PurchaseOrder[]
+  salesOrders    SalesOrder[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@map("warehouses")
+}
+
+model Inventory {
+  id          String @id @default(uuid()) @db.Uuid
+  companyId   String @map("company_id") @db.Uuid
+  warehouseId String @map("warehouse_id") @db.Uuid
+  productId   String @map("product_id") @db.Uuid
+
+  // Explicit stock buckets
+  currentStock   Decimal @default(0) @db.Decimal(10, 2)
+  availableStock Decimal @default(0) @db.Decimal(10, 2)
+  reservedStock  Decimal @default(0) @db.Decimal(10, 2)
+  damagedStock   Decimal @default(0) @db.Decimal(10, 2)
+
+  // Location-specific thresholds
+  minStockLevel Decimal  @default(0) @db.Decimal(10, 2)
+  maxStockLevel Decimal? @db.Decimal(10, 2)
+  reorderLevel  Decimal  @default(0) @db.Decimal(10, 2)
+  version       Int      @default(1)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, warehouseId, productId])
+  @@index([companyId])
+  @@index([warehouseId])
+  @@index([productId])
+  @@map("inventories")
+}
+
+enum MovementType {
+  OPENING_STOCK
+  PURCHASE_IN
+  MANUAL_ADJUSTMENT_UP
+  MANUAL_ADJUSTMENT_DOWN
+  TRANSFER_IN
+  TRANSFER_OUT
+  DAMAGE
+  RETURN_IN
+  RETURN_OUT
+  SALE_OUT
+}
+
+model StockMovement {
+  id            String       @id @default(uuid()) @db.Uuid
+  companyId     String       @map("company_id") @db.Uuid
+  warehouseId   String       @map("warehouse_id") @db.Uuid
+  productId     String       @map("product_id") @db.Uuid
+  type          MovementType
+  quantity      Decimal      @db.Decimal(10, 2)
+  previousStock Decimal      @db.Decimal(10, 2)
+  newStock      Decimal      @db.Decimal(10, 2)
+  reference     String?      @db.VarChar(255) // e.g. PO Number, Order Number
+  notes         String?      @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at") // IMMUTABLE: no updatedAt or deletedAt
+  createdBy String   @map("created_by") @db.Uuid
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([companyId])
+  @@index([warehouseId])
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+// -----------------------------------------------------------------------------
+// PROCUREMENT DOMAIN
+// -----------------------------------------------------------------------------
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Supplier {
+  id            String         @id @default(uuid()) @db.Uuid
+  companyId     String         @map("company_id") @db.Uuid
+  name          String         @db.VarChar(255)
+  contactPerson String?        @map("contact_person") @db.VarChar(255)
+  email         String?        @db.VarChar(255)
+  phone         String?        @db.VarChar(50)
+  mobile        String?        @db.VarChar(50)
+  taxNumber     String?        @map("tax_number") @db.VarChar(100)
+  address       String?        @db.Text
+  city          String?        @db.VarChar(100)
+  country       String?        @db.VarChar(100)
+  notes         String?        @db.Text
+  status        SupplierStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  purchaseOrders PurchaseOrder[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+  @@index([status])
+  @@map("suppliers")
+}
+
+enum POStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PARTIALLY_RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+// -----------------------------------------------------------------------------
+// REPORTS & EXPORT ENGINE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum ReportStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model ReportTemplate {
+  id            String  @id @default(uuid()) @db.Uuid
+  code          String  @unique @db.VarChar(100)
+  name          String  @db.VarChar(255)
+  module        String  @db.VarChar(100)
+  description   String? @db.Text
+  defaultConfig Json    @map("default_config")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  reports Report[]
+
+  @@index([module])
+  @@map("report_templates")
+}
+
+model Report {
+  id          String       @id @default(uuid()) @db.Uuid
+  companyId   String       @map("company_id") @db.Uuid
+  templateId  String       @map("template_id") @db.Uuid
+  name        String       @db.VarChar(255)
+  description String?      @db.Text
+  status      ReportStatus @default(ACTIVE)
+  config      Json // User's custom configuration
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  template ReportTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+
+  @@index([companyId])
+  @@index([templateId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("reports")
+}
+
+model PurchaseOrder {
+  id                   String    @id @default(uuid()) @db.Uuid
+  companyId            String    @map("company_id") @db.Uuid
+  supplierId           String    @map("supplier_id") @db.Uuid
+  warehouseId          String    @map("warehouse_id") @db.Uuid
+  orderNumber          String    @map("order_number") @db.VarChar(100)
+  orderDate            DateTime  @map("order_date")
+  expectedDeliveryDate DateTime? @map("expected_delivery_date")
+  status               POStatus  @default(DRAFT)
+  totalAmount          Decimal   @default(0) @map("total_amount") @db.Decimal(10, 2)
+  notes                String?   @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  supplier  Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  items     PurchaseItem[]
+
+  @@unique([companyId, orderNumber])
+  @@index([companyId])
+  @@index([supplierId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([expectedDeliveryDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseItem {
+  id               String  @id @default(uuid()) @db.Uuid
+  purchaseOrderId  String  @map("purchase_order_id") @db.Uuid
+  productId        String  @map("product_id") @db.Uuid
+  quantity         Decimal @db.Decimal(10, 2)
+  unitCost         Decimal @map("unit_cost") @db.Decimal(10, 2)
+  discount         Decimal @default(0) @db.Decimal(5, 2)
+  tax              Decimal @default(0) @db.Decimal(5, 2)
+  totalPrice       Decimal @map("total_price") @db.Decimal(10, 2)
+  receivedQuantity Decimal @default(0) @map("received_quantity") @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+  @@map("purchase_items")
+}
+
+// -----------------------------------------------------------------------------
+// SYSTEM DOMAIN
+// -----------------------------------------------------------------------------
+
+model AuditLog {
+  id        String  @id @default(uuid()) @db.Uuid
+  companyId String? @map("company_id") @db.Uuid // null if system-level audit
+  userId    String? @map("user_id") @db.Uuid
+  action    String  @db.VarChar(100)
+  entity    String  @db.VarChar(100)
+  entityId  String  @map("entity_id") @db.VarChar(255)
+  details   Json?
+
+  createdAt DateTime @default(now()) @map("created_at") // IMMUTABLE
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+model ActivityLog {
+  id         String  @id @default(uuid()) @db.Uuid
+  companyId  String  @map("company_id") @db.Uuid
+  userId     String? @map("user_id") @db.Uuid
+  action     String  @db.VarChar(255)
+  entityType String? @map("entity_type") @db.VarChar(100)
+  entityId   String? @map("entity_id") @db.Uuid
+  metadata   Json?
+
+  createdAt DateTime @default(now()) @map("created_at") // IMMUTABLE
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("activity_logs")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Notification {
+  id         String           @id @default(uuid()) @db.Uuid
+  companyId  String           @map("company_id") @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  title      String           @db.VarChar(255)
+  message    String           @db.Text
+  type       NotificationType @default(INFO)
+  priority   PriorityLevel    @default(MEDIUM)
+  module     String?          @db.VarChar(100)
+  entityType String?          @map("entity_type") @db.VarChar(100)
+  entityId   String?          @map("entity_id") @db.Uuid
+  isRead     Boolean          @default(false) @map("is_read")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, userId, type, priority, isRead, createdAt])
+  @@index([entityType, entityId])
+  @@map("notifications")
+}
+
+// -----------------------------------------------------------------------------
+// WORKFLOW & APPROVAL ENGINE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum WorkflowStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ApprovalType {
+  SINGLE
+  MULTIPLE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+  CANCELLED
+}
+
+enum ApprovalActionType {
+  APPROVE
+  REJECT
+  RETURN
+  CANCEL
+}
+
+model Workflow {
+  id          String         @id @default(uuid()) @db.Uuid
+  companyId   String         @map("company_id") @db.Uuid
+  name        String         @db.VarChar(255)
+  code        String         @db.VarChar(100)
+  description String?        @db.Text
+  module      String         @db.VarChar(100) // e.g. "PROCUREMENT", "HR", "FINANCE"
+  status      WorkflowStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  levels   ApprovalLevel[]
+  requests ApprovalRequest[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([module])
+  @@index([status])
+  @@map("workflows")
+}
+
+model ApprovalLevel {
+  id           String       @id @default(uuid()) @db.Uuid
+  workflowId   String       @map("workflow_id") @db.Uuid
+  levelNumber  Int          @map("level_number")
+  roleId       String       @map("role_id") @db.Uuid
+  approvalType ApprovalType @default(SINGLE) @map("approval_type")
+  required     Boolean      @default(true)
+  minApprovers Int          @default(1) @map("min_approvers")
+  sequence     Int          @default(1)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  role     Role     @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([workflowId, levelNumber])
+  @@index([workflowId])
+  @@map("approval_levels")
+}
+
+model ApprovalRequest {
+  id           String        @id @default(uuid()) @db.Uuid
+  companyId    String        @map("company_id") @db.Uuid
+  workflowId   String        @map("workflow_id") @db.Uuid
+  entityType   String        @map("entity_type") @db.VarChar(100) // e.g. "PurchaseOrder"
+  entityId     String        @map("entity_id") @db.Uuid
+  currentLevel Int           @default(1) @map("current_level")
+  status       RequestStatus @default(PENDING)
+  requestedBy  String        @map("requested_by") @db.Uuid
+  requestedAt  DateTime      @default(now()) @map("requested_at")
+  approvedAt   DateTime?     @map("approved_at")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company           @relation(fields: [companyId], references: [id], onDelete: Restrict)
+  workflow Workflow          @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  history  ApprovalHistory[]
+
+  @@index([companyId])
+  @@index([workflowId])
+  @@index([entityType, entityId])
+  @@index([status])
+  @@index([currentLevel])
+  @@index([requestedAt])
+  @@index([approvedAt])
+  @@map("approval_requests")
+}
+
+model ApprovalHistory {
+  id             String             @id @default(uuid()) @db.Uuid
+  requestId      String             @map("request_id") @db.Uuid
+  action         ApprovalActionType
+  userId         String             @map("user_id") @db.Uuid
+  comment        String?            @db.Text
+  previousStatus RequestStatus      @map("previous_status")
+  newStatus      RequestStatus      @map("new_status")
+
+  createdAt DateTime @default(now()) @map("created_at") // IMMUTABLE
+
+  request ApprovalRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([userId])
+  @@map("approval_histories")
+}
+
+// -----------------------------------------------------------------------------
+// DASHBOARD & BUSINESS INTELLIGENCE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum DashboardStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum WidgetType {
+  KPI_CARD
+  LINE_CHART
+  BAR_CHART
+  PIE_CHART
+  TABLE
+  RECENT_ACTIVITIES
+  PENDING_APPROVALS
+  NOTIFICATION_SUMMARY
+}
+
+model Dashboard {
+  id          String          @id @default(uuid()) @db.Uuid
+  companyId   String          @map("company_id") @db.Uuid
+  name        String          @db.VarChar(255)
+  code        String          @db.VarChar(100)
+  module      String          @db.VarChar(100)
+  description String?         @db.Text
+  status      DashboardStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([module])
+  @@map("dashboards")
+}
+
+model DashboardWidget {
+  id          String     @id @default(uuid()) @db.Uuid
+  dashboardId String     @map("dashboard_id") @db.Uuid
+  type        WidgetType
+  title       String     @db.VarChar(255)
+  layout      Json // Grid layout config (x, y, w, h)
+  config      Json // Backend API endpoint and series mappings
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId])
+  @@map("dashboard_widgets")
+}
+
+// -----------------------------------------------------------------------------
+// SALES & ORDER MANAGEMENT DOMAIN
+// -----------------------------------------------------------------------------
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Customer {
+  id            String         @id @default(uuid()) @db.Uuid
+  companyId     String         @map("company_id") @db.Uuid
+  companyName   String         @map("company_name") @db.VarChar(255)
+  contactPerson String?        @map("contact_person") @db.VarChar(255)
+  email         String?        @db.VarChar(255)
+  phone         String?        @db.VarChar(50)
+  mobile        String?        @db.VarChar(50)
+  taxNumber     String?        @map("tax_number") @db.VarChar(100)
+  address       String?        @db.Text
+  city          String?        @db.VarChar(100)
+  country       String?        @db.VarChar(100)
+  creditLimit   Decimal?       @map("credit_limit") @db.Decimal(15, 2)
+  paymentTerms  String?        @map("payment_terms") @db.VarChar(100)
+  notes         String?        @db.Text
+  status        CustomerStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  salesOrders SalesOrder[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("customers")
+}
+
+enum SalesOrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PARTIALLY_DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+model SalesOrder {
+  id           String           @id @default(uuid()) @db.Uuid
+  companyId    String           @map("company_id") @db.Uuid
+  customerId   String           @map("customer_id") @db.Uuid
+  warehouseId  String           @map("warehouse_id") @db.Uuid
+  salesNumber  String           @unique @map("sales_number") @db.VarChar(100)
+  orderDate    DateTime         @map("order_date")
+  deliveryDate DateTime?        @map("delivery_date")
+  status       SalesOrderStatus @default(DRAFT)
+  notes        String?          @db.Text
+
+  totalAmount Decimal @default(0) @map("total_amount") @db.Decimal(15, 2)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  customer  Customer  @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  items SalesOrderItem[]
+
+  @@index([companyId])
+  @@index([customerId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([orderDate])
+  @@index([deliveryDate])
+  @@map("sales_orders")
+}
+
+model SalesOrderItem {
+  id           String @id @default(uuid()) @db.Uuid
+  salesOrderId String @map("sales_order_id") @db.Uuid
+  productId    String @map("product_id") @db.Uuid
+
+  quantity  Decimal @db.Decimal(10, 2)
+  unitPrice Decimal @map("unit_price") @db.Decimal(15, 2)
+  discount  Decimal @default(0) @db.Decimal(5, 2) // %
+  tax       Decimal @default(0) @db.Decimal(5, 2) // %
+  total     Decimal @db.Decimal(15, 2)
+
+  deliveredQty Decimal @default(0) @map("delivered_qty") @db.Decimal(10, 2)
+
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([salesOrderId])
+  @@index([productId])
+  @@map("sales_order_items")
+}
+
+// -----------------------------------------------------------------------------
+// FINANCE DOMAIN
+// -----------------------------------------------------------------------------
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Account {
+  id          String        @id @default(uuid()) @db.Uuid
+  companyId   String        @map("company_id") @db.Uuid
+  parentId    String?       @map("parent_id") @db.Uuid
+  accountCode String        @map("account_code") @db.VarChar(50)
+  accountName String        @map("account_name") @db.VarChar(255)
+  accountType AccountType   @map("account_type")
+  description String?       @db.Text
+  status      AccountStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parent   Account?  @relation("AccountHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children Account[] @relation("AccountHierarchy")
+
+  journalEntries JournalEntry[]
+
+  @@unique([companyId, accountCode])
+  @@index([companyId])
+  @@index([accountType])
+  @@index([status])
+  @@map("accounts")
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+}
+
+model Journal {
+  id            String        @id @default(uuid()) @db.Uuid
+  companyId     String        @map("company_id") @db.Uuid
+  journalNumber String        @unique @map("journal_number") @db.VarChar(100)
+  referenceType String?       @map("reference_type") @db.VarChar(100)
+  referenceId   String?       @map("reference_id") @db.VarChar(100)
+  postingDate   DateTime      @map("posting_date")
+  description   String?       @db.Text
+  status        JournalStatus @default(DRAFT)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdBy String?  @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  company Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  entries JournalEntry[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([postingDate])
+  @@map("journals")
+}
+
+model JournalEntry {
+  id          String  @id @default(uuid()) @db.Uuid
+  journalId   String  @map("journal_id") @db.Uuid
+  accountId   String  @map("account_id") @db.Uuid
+  debit       Decimal @default(0) @db.Decimal(15, 2)
+  credit      Decimal @default(0) @db.Decimal(15, 2)
+  description String? @db.Text
+
+  journal Journal @relation(fields: [journalId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([journalId])
+  @@index([accountId])
+  @@map("journal_entries")
+}
+
+// --- AI ORCHESTRATION ---
+
+enum AiMessageRole {
+  USER
+  AI
+  SYSTEM
+}
+
+enum AiSessionStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum AiActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+}
+
+model AiSession {
+  id        String          @id @default(uuid()) @db.Uuid
+  companyId String          @db.Uuid
+  userId    String          @db.Uuid
+  status    AiSessionStatus @default(ACTIVE)
+  title     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  company  Company     @relation(fields: [companyId], references: [id])
+  user     User        @relation(fields: [userId], references: [id])
+  messages AiMessage[]
+
+  @@map("ai_sessions")
+}
+
+model AiMessage {
+  id        String        @id @default(uuid()) @db.Uuid
+  sessionId String        @db.Uuid
+  role      AiMessageRole
+  content   String        @db.Text
+  tokens    Int?
+  createdAt DateTime      @default(now())
+
+  session   AiSession          @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  approvals AiActionApproval[]
+
+  @@map("ai_messages")
+}
+
+model AiActionApproval {
+  id         String         @id @default(uuid()) @db.Uuid
+  messageId  String         @db.Uuid
+  actionType String
+  payload    Json
+  status     AiActionStatus @default(PENDING)
+  approvedBy String?        @db.Uuid
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  message  AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  approver User?     @relation(fields: [approvedBy], references: [id])
+
+  @@map("ai_action_approvals")
+}
+
+model AiPromptTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @db.Uuid
+  code        String   @unique
+  name        String
+  description String?
+  content     String   @db.Text
+  variables   Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@map("ai_prompt_templates")
+}

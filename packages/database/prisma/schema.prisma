@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -1039,9 +1040,9 @@ enum AiActionStatus {
 }
 
 model AiSession {
-  id        String          @id @default(uuid())
-  companyId String
-  userId    String
+  id        String          @id @default(uuid()) @db.Uuid
+  companyId String          @db.Uuid
+  userId    String          @db.Uuid
   status    AiSessionStatus @default(ACTIVE)
   title     String?
   createdAt DateTime        @default(now())
@@ -1055,8 +1056,8 @@ model AiSession {
 }
 
 model AiMessage {
-  id        String        @id @default(uuid())
-  sessionId String
+  id        String        @id @default(uuid()) @db.Uuid
+  sessionId String        @db.Uuid
   role      AiMessageRole
   content   String        @db.Text
   tokens    Int?
@@ -1069,12 +1070,12 @@ model AiMessage {
 }
 
 model AiActionApproval {
-  id         String         @id @default(uuid())
-  messageId  String
+  id         String         @id @default(uuid()) @db.Uuid
+  messageId  String         @db.Uuid
   actionType String
   payload    Json
   status     AiActionStatus @default(PENDING)
-  approvedBy String?
+  approvedBy String?        @db.Uuid
   createdAt  DateTime       @default(now())
   updatedAt  DateTime       @updatedAt
 
@@ -1085,8 +1086,8 @@ model AiActionApproval {
 }
 
 model AiPromptTemplate {
-  id          String   @id @default(uuid())
-  companyId   String
+  id          String   @id @default(uuid()) @db.Uuid
+  companyId   String   @db.Uuid
   code        String   @unique
   name        String
   description String?
