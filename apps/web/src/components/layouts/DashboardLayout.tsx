@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import ProtectedRoute from '../shared/ProtectedRoute';
+import { AiVoiceButton } from '../ai/AiVoiceButton';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -27,6 +28,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        <AiVoiceButton />
       </div>
     </ProtectedRoute>
   );

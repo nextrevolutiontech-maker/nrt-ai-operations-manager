@@ -7,7 +7,7 @@ import { AiContextEngineService } from './context/ai-context.service';
 import { AiApprovalsService } from './approvals/ai-approvals.service';
 import { ToolRegistryService } from './tools/tool-registry.service';
 import { ProductSearchTool } from './tools/product-search.tool';
-import { MockAiProvider } from './providers/mock-ai.provider';
+import { GeminiAiProvider } from './providers/gemini-ai.provider';
 import { AI_PROVIDER_TOKEN } from './providers/ai-provider.interface';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ProductsModule } from '../products/products.module';
@@ -25,7 +25,7 @@ import { ProductsModule } from '../products/products.module';
     ProductSearchTool,
     {
       provide: AI_PROVIDER_TOKEN,
-      useClass: MockAiProvider,
+      useClass: GeminiAiProvider,
     },
   ],
 })

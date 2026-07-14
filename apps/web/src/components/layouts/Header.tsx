@@ -1,6 +1,7 @@
 import { useAuthStore } from '../../hooks/useAuth';
 import { Bell, UserCircle, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user } = useAuthStore();
@@ -25,10 +26,10 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
       
       <div className="flex items-center gap-2 sm:gap-4">
-        <button className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+        <Link href="/notifications" className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-        </button>
+        </Link>
         
         <div className="flex items-center gap-3 pl-2 sm:pl-4 border-l border-slate-200">
           <div className="hidden sm:flex flex-col text-right">

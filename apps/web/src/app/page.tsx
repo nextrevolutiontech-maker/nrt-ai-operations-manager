@@ -4,13 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '../components/layouts/DashboardLayout';
 import { productService } from '../services/master-data';
 import { warehouseService, inventoryService } from '../services/inventory';
+import { reportsService } from '../services/reports';
 import { Package, MapPin, Layers, TrendingUp, AlertCircle } from 'lucide-react';
 import { PageHeader } from '../components/shared/PageHeader';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Home() {
   const { data: productsData, isLoading: pLoading } = useQuery({ queryKey: ['products'], queryFn: () => productService.getAll() });
   const { data: warehousesData, isLoading: wLoading } = useQuery({ queryKey: ['warehouses'], queryFn: () => warehouseService.getAll() });
   const { data: inventoryData, isLoading: iLoading } = useQuery({ queryKey: ['inventories'], queryFn: () => inventoryService.getAll() });
+  const { data: salesData, isLoading: sLoading } = useQuery({ queryKey: ['sales-performance'], queryFn: () => reportsService.getSalesPerformance() });
 
   const totalProducts = productsData?.data?.length || 0;
   const totalWarehouses = warehousesData?.data?.length || 0;
@@ -18,6 +21,18 @@ export default function Home() {
   // Calculate low stock items
   const lowStockCount = inventoryData?.data?.filter((inv: any) => inv.quantity <= (inv.product?.minStockLevel || 0)).length || 0;
   const totalStockItems = inventoryData?.data?.reduce((acc: number, curr: any) => acc + curr.quantity, 0) || 0;
+
+  const defaultChartData = [
+    { name: 'Mon', sales: 4000 },
+    { name: 'Tue', sales: 3000 },
+    { name: 'Wed', sales: 2000 },
+    { name: 'Thu', sales: 2780 },
+    { name: 'Fri', sales: 1890 },
+    { name: 'Sat', sales: 2390 },
+    { name: 'Sun', sales: 3490 },
+  ];
+  
+  const chartData = salesData?.data?.length > 0 ? salesData.data : defaultChartData;
 
   const kpis = [
     { title: 'Total Products', value: pLoading ? '...' : totalProducts, icon: Package, color: 'text-blue-600', bg: 'bg-blue-100' },
@@ -92,43 +107,31 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="p-6 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg border border-slate-700 min-h-[400px] text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-white">System Status</h2>
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-semibold rounded-full flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></div>
-                All Systems Operational
-              </span>
-            </div>
-            
-            <div className="space-y-4 mt-8">
-              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 backdrop-blur-sm">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">API Connection</span>
-                  <span className="text-emerald-400 font-medium">9ms</span>
-                </div>
-                <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full w-[100%]"></div>
-                </div>
-              </div>
-              
-              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 backdrop-blur-sm">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-300">Database Load</span>
-                  <span className="text-blue-400 font-medium">12%</span>
-                </div>
-                <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-blue-500 h-full w-[12%]"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-12 flex items-center justify-center p-6 border border-dashed border-slate-600 rounded-xl text-slate-400 bg-slate-800/30">
-              <p className="text-sm text-center">Pending Approvals module will be activated in Workflow Sprint.</p>
-            </div>
+        <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 min-h-[400px]">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              Sales Trend
+            </h2>
+            <button className="text-sm text-blue-600 font-medium hover:underline">View Report</button>
           </div>
+          {sLoading ? (
+            <div className="flex items-center justify-center h-64 text-slate-400">Loading chart...</div>
+          ) : (
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Line type="monotone" dataKey="sales" stroke="#3b82f6" strokeWidth={3} dot={{r: 4, strokeWidth: 2}} activeDot={{r: 6}} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

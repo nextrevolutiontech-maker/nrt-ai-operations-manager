@@ -58,6 +58,7 @@ const navItems = [
   { name: 'Approvals', href: '/approvals', icon: CheckCircle, permission: 'read:approvals' },
   { name: 'Workflows', href: '/workflows', icon: Activity, permission: 'read:workflows' },
   { name: 'Reports', href: '/reports', icon: FileText, permission: 'read:reports' },
+  { name: 'Settings', href: '/settings', icon: Settings, permission: 'read:settings' },
 ];
 
 export function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (val: boolean) => void }) {
