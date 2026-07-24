@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, FileText, Activity, CreditCard, X, ChevronDown, ChevronRight, Boxes, Warehouse, CircleDollarSign, BookOpen, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, FileText, Activity, CreditCard, X, ChevronDown, ChevronRight, Boxes, Warehouse, CircleDollarSign, BookOpen, CheckCircle, Sparkles } from 'lucide-react';
 import { useAuthStore } from '../../hooks/useAuth';
 import { cn } from '../../lib/utils';
 import { useState, useEffect } from 'react';
 
 const navItems = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, permission: 'read:dashboard' },
+  { name: 'AI Command Center', href: '/ai', icon: Sparkles, permission: 'read:ai-dashboard' },
   { 
     name: 'Master Data', 
     icon: Settings, 

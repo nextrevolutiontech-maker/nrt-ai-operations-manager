@@ -9,31 +9,31 @@ export interface ReportSummary {
 
 export const reportsService = {
   getInventoryValuation: async () => {
-    const { data } = await api.get('/reports/inventory/valuation');
+    const { data } = await api.get('/analytics/inventory');
     return data;
   },
   
   getLowStockAlerts: async () => {
-    const { data } = await api.get('/reports/inventory/low-stock');
+    const { data } = await api.get('/analytics/inventory');
     return data;
   },
 
   getSalesPerformance: async (startDate?: string, endDate?: string) => {
-    const { data } = await api.get('/reports/sales/performance', {
+    const { data } = await api.get('/analytics/sales', {
       params: { startDate, endDate }
     });
     return data;
   },
 
   getProfitAndLoss: async (startDate?: string, endDate?: string) => {
-    const { data } = await api.get('/reports/finance/profit-loss', {
+    const { data } = await api.get('/analytics/finance', {
       params: { startDate, endDate }
     });
     return data;
   },
 
   getPurchaseHistory: async (startDate?: string, endDate?: string) => {
-    const { data } = await api.get('/reports/procurement/purchase-history', {
+    const { data } = await api.get('/analytics/procurement', {
       params: { startDate, endDate }
     });
     return data;

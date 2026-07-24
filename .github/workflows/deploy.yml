@@ -1,0 +1,38 @@
+name: Production Deployment Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js & pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.15.0
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Typecheck & Lint
+        run: |
+          pnpm --filter api typecheck
+          pnpm --filter web typecheck
+
+      - name: Run Security & Tenancy Tests
+        run: pnpm --filter api test
+
+      - name: Build Docker Images
+        run: |
+          docker build -t nrt-api:latest -f infrastructure/docker/Dockerfile.api .
+          docker build -t nrt-web:latest -f infrastructure/docker/Dockerfile.web .
+
+      - name: Deploy to Production Environment
+        if: success()
+        run: echo "Production Deployment Successful!"

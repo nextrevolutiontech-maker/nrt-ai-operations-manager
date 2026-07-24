@@ -81,4 +81,26 @@ export class AnalyticsController {
       query,
     );
   }
+
+  @Get('sales')
+  @Permissions('read:analytics')
+  @ApiOperation({ summary: 'Get sales analytics' })
+  getSalesAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
+    return this.analyticsService.getSalesAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
+  }
+
+  @Get('finance')
+  @Permissions('read:analytics')
+  @ApiOperation({ summary: 'Get finance analytics' })
+  getFinanceAnalytics(@Req() req: any, @Query() query: AnalyticsFilterDto) {
+    return this.analyticsService.getFinanceAnalytics(
+      req.user.companyId,
+      req.user.id,
+      query,
+    );
+  }
 }

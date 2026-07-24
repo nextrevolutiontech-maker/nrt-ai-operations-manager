@@ -21,42 +21,49 @@ This document tracks the overall progress of the NRT AI Operations Manager ERP p
 
 ### ✅ Completed Phases:
 1. **Phase 1: Core Foundation & Auth**
-   - Login Screen with Zustand state persistence.
-   - Protected routes and layout (Sidebar with Expandable Menus, Header).
-   - Global Axios interceptors for token refresh.
 2. **Phase 2: Master Data UI**
-   - Fully functional screens for **Products**, **Categories**, **Brands**, and **Units**.
-   - Data tables, Create/Edit forms with `react-hook-form` and `zod` validation.
 3. **Phase 3: Inventory Management UI**
-   - **Warehouses:** Creation and management of storage locations.
-   - **Stock View:** Dashboard showing current stock, available stock, and minimum thresholds.
-   - **Stock Adjustments:** Forms to manually adjust stock levels up or down.
 4. **Phase 4: Finance Module UI**
-   - **Chart of Accounts:** Ledger account management grouped by type (Asset, Liability, Equity, Revenue, Expense).
-   - **General Journal:** Advanced double-entry accounting form with dynamic lines and strict Debit/Credit balancing validation.
 5. **Phase 5: Procurement Module**
-   - **Suppliers** screen and API connections.
-   - **Purchase Orders (PO)** forms with dynamic product lines and total calculations.
 6. **Phase 6: Sales Module**
-   - **Customers** management.
-   - **Sales Orders** with real-time stock validations.
 7. **Phase 7: Workflows & Approvals**
-   - **Workflows Builder** to define multi-level approval hierarchies.
-   - **Pending Approvals Inbox** for dynamic requests review.
+8. **Phase 8: Reports & Dashboard Analytics**
+   - Connected main dashboard to real data.
+   - Built custom P&L, Inventory Valuation, and Sales charts using Recharts.
+9. **Phase 9: Settings & AI Setup**
+   - Updated Database Schema with `taxId`, `phone`, `currency`, `timezone`.
+   - Created Backend Settings API.
+   - Built Frontend Notifications UI.
+   - Redesigned AI Voice Assistant with a Smart Fullscreen UI (animations & audio waves).
+10. **Phase 10: Production Readiness & Polish**
+    - Implemented `global-error.tsx` and route-level Error Boundaries.
+    - Added premium `not-found.tsx` 404 page and SEO metadata.
+    - Created GitHub Actions `.github/workflows/ci.yml` pipeline.
+    - Created `apps/api/Dockerfile` for backend containerization.
+    - Configured Vercel deployment readiness.
+11. **Phase 11: End-to-End Forms & AI Capabilities**
+    - Implemented Automated Actions and Advanced Orchestrator for complex workflows.
 
-### ⏳ Pending Phases (Where to Continue Next):
+12. **Phase 12 / Sprint D: AI Experience & Demo Readiness (COMPLETED)**
+    - Seeded full set of AI permissions (`create:ai-sessions`, `read:ai-sessions`, `read:ai-dashboard`, `create:ai-action-approvals`, `manage:ai-demo`).
+    - Implemented `DemoScenariosService` supporting 10 preset demo scenarios and 1-click Demo Environment Reset.
+    - Expanded `AiController` with full suite of REST endpoints for Dashboard Overview, Executive Briefings, AI Recommendations, Anomaly Alerts, Staged Action Approvals, and Task History.
+    - Built frontend `DemoBanner` (`DEMO MODE: ON`, active scenario indicator, dataset source, 1-click Reset button).
+    - Built `ExplainDecisionModal` for full AI decision transparency (Evidence, Risk Score, Confidence %, Policies, Tools, Expected ROI).
+    - Built `DemoScenarioSwitcher` for live client sales presentations.
+    - Built `AiChatDrawer` slide-over panel with streaming AI response simulation, interactive Action Cards, and voice toggle.
+    - Created unified `/ai` **AI Command Center & Workspace** route.
 
-**Phase 8: Reports & Dashboard Analytics**
-- [ ] Connect the main Dashboard charts to real aggregate data endpoints.
-- [ ] Implement financial P&L, Inventory Valuation, and Sales Reports.
+13. **Phase 13 / Sprint E: Production Readiness, Security Hardening & Enterprise Deployment (COMPLETED)**
+    - Implemented Zero-Trust `TenantValidationGuard` for strict multi-tenant isolation.
+    - Implemented `ApiRateLimitGuard` enforcing HTTP request rate limits and daily LLM token cost quotas per tenant.
+    - Implemented `PromptSanitizerService` protecting against adversarial AI prompt injections.
+    - Implemented `SecurityAuditService` and `AuditExportService` for enterprise compliance reporting.
+    - Implemented `HealthController` exposing Kubernetes liveness (`/health/liveness`) and readiness (`/health/readiness`) probes.
+    - Implemented `BackupService` and `RestoreService` for automated database backups and disaster recovery verification.
+    - Created production containerization stack: `Dockerfile.api`, `Dockerfile.web`, `docker-compose.prod.yml`, and `nginx.conf` reverse proxy with security headers.
+    - Created deployment automation scripts (`healthcheck.sh`, `backup.sh`, `deployment-checklist.md`).
+    - Implemented automated test suites (`tenancy.spec.ts`, `security.spec.ts`, `production-readiness.spec.ts`) and CI/CD pipelines (`deploy.yml`).
 
-**Phase 9: Settings & AI Setup**
-- [ ] Company Configurations.
-- [ ] System notifications integration.
-- [ ] Foundation for AI Voice Integration.
-
-## Instructions for Antigravity (Next Session)
-When resuming work, please read this `PROJECT_STATUS.md` file. 
-1. Verify the frontend and backend servers are running.
-2. Immediately proceed to **Phase 8: Reports & Dashboard Analytics** by creating the Implementation Plan.
-3. Ensure you follow the premium aesthetic guidelines (Tailwind styling, Lucide icons, responsive modals) established in the previous phases.
+## Next Up: Sprint F (Go-To-Market)
+- Landing Page, Demo Video, Documentation, Case Studies, Pricing, Sales Deck, Client Demo Environment, SaaS Deployment.

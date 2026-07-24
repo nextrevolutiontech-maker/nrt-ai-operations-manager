@@ -22,7 +22,7 @@ export default function Home() {
   const lowStockCount = inventoryData?.data?.filter((inv: any) => inv.quantity <= (inv.product?.minStockLevel || 0)).length || 0;
   const totalStockItems = inventoryData?.data?.reduce((acc: number, curr: any) => acc + curr.quantity, 0) || 0;
 
-  const defaultChartData = [
+  const chartData = salesData?.data?.chartData || [
     { name: 'Mon', sales: 4000 },
     { name: 'Tue', sales: 3000 },
     { name: 'Wed', sales: 2000 },
@@ -31,8 +31,6 @@ export default function Home() {
     { name: 'Sat', sales: 2390 },
     { name: 'Sun', sales: 3490 },
   ];
-  
-  const chartData = salesData?.data?.length > 0 ? salesData.data : defaultChartData;
 
   const kpis = [
     { title: 'Total Products', value: pLoading ? '...' : totalProducts, icon: Package, color: 'text-blue-600', bg: 'bg-blue-100' },

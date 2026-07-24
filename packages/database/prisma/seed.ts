@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -73,7 +74,17 @@ async function main() {
     { name: 'manage:report', description: 'Manage reports' },
     { name: 'export:report', description: 'Export reports' },
     { name: 'manage:notifications', description: 'Manage notifications' },
-    { name: 'create:dashboard', description: 'Manage dashboard' },
+    { name: 'create:dashboard', description: 'Create dashboard' },
+    { name: 'read:dashboard', description: 'View dashboards' },
+    { name: 'update:dashboard', description: 'Update dashboards' },
+    { name: 'delete:dashboard', description: 'Delete dashboards' },
+    { name: 'read:analytics', description: 'View analytics' },
+    { name: 'create:ai-sessions', description: 'Create AI sessions' },
+    { name: 'read:ai-sessions', description: 'View AI sessions' },
+    { name: 'create:ai-action-approvals', description: 'Request AI approvals' },
+    { name: 'read:ai-action-approvals', description: 'View AI approvals' },
+    { name: 'read:ai-dashboard', description: 'View AI dashboard' },
+    { name: 'manage:ai-demo', description: 'Manage AI demo scenarios and reset' },
   ];
 
   for (const p of permissionsToCreate) {

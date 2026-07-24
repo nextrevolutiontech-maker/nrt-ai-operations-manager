@@ -1,142 +1,119 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import { DashboardLayout } from '../../../components/layouts/DashboardLayout';
 import { PageHeader } from '../../../components/shared/PageHeader';
+import { useQuery } from '@tanstack/react-query';
 import { reportsService } from '../../../services/reports';
-import { ArrowLeft, ArrowUpRight, ArrowDownRight, DollarSign } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowUpRight, ArrowDownRight, Building2, Wallet } from 'lucide-react';
 
-export default function FinanceReportPage() {
-  const [period, setPeriod] = useState('This Year');
+export default function FinancePerformancePage() {
   const { data: financeData, isLoading } = useQuery({ 
-    queryKey: ['finance-pl', period], 
+    queryKey: ['finance-performance'], 
     queryFn: () => reportsService.getProfitAndLoss() 
   });
 
-  const dummyPL = {
-    revenue: 145000,
-    costOfGoodsSold: 65000,
-    grossProfit: 80000,
-    operatingExpenses: {
-      salaries: 25000,
-      rent: 5000,
-      utilities: 1500,
-      marketing: 8500,
-      other: 3000
-    },
-    totalExpenses: 43000,
-    netIncome: 37000
-  };
-
-  const pl = financeData?.data || dummyPL;
+  const totalRevenue = financeData?.data?.totalRevenue || 0;
+  const totalExpenses = financeData?.data?.totalExpenses || 0;
+  const netProfit = financeData?.data?.netProfit || 0;
+  const margin = financeData?.data?.margin || 0;
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <Link href="/reports" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Reports Hub
-        </Link>
-        <div className="flex justify-between items-end">
-          <PageHeader 
-            title="Profit & Loss Statement" 
-            description="Financial summary of revenues, costs, and expenses."
-          />
-          <select 
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2 border border-slate-200 rounded-xl text-sm bg-white"
-          >
-            <option>This Month</option>
-            <option>This Quarter</option>
-            <option>This Year</option>
-            <option>Last Year</option>
-          </select>
-        </div>
-      </div>
+      <PageHeader 
+        title="Financial Profit & Loss" 
+        description="Analyze your company's revenue, expenses, and net profitability"
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500">Total Revenue</h3>
-            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-800">${pl.revenue.toLocaleString()}</h2>
+      {isLoading ? (
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-slate-500 animate-pulse">Calculating financials...</p>
         </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-slate-500">Total Expenses</h3>
-            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-              <ArrowDownRight className="w-4 h-4" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-800">${(pl.costOfGoodsSold + pl.totalExpenses).toLocaleString()}</h2>
-        </div>
-
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-2xl shadow-lg border border-slate-700 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 rounded-full mix-blend-multiply filter blur-2xl opacity-30"></div>
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <h3 className="text-sm font-medium text-slate-300">Net Income</h3>
-            <div className="p-2 bg-white/10 text-emerald-400 rounded-lg">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-white relative z-10">${pl.netIncome.toLocaleString()}</h2>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden max-w-4xl mx-auto">
-        <div className="p-6 border-b border-slate-100 bg-slate-50">
-          <h2 className="text-lg font-bold text-slate-800">Income Statement Breakdown</h2>
-        </div>
-        
-        <div className="p-6 space-y-6">
-          {/* Revenue Section */}
-          <div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-200">
-              <span className="font-semibold text-slate-800">Operating Revenue</span>
-              <span className="font-semibold text-slate-800">${pl.revenue.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 text-slate-600 pl-4">
-              <span>Sales Revenue</span>
-              <span>${pl.revenue.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center py-2 text-slate-600 pl-4 border-b border-slate-100">
-              <span>Cost of Goods Sold (COGS)</span>
-              <span className="text-red-600">- ${pl.costOfGoodsSold.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between items-center py-3 bg-slate-50 px-4 rounded-lg mt-2">
-              <span className="font-bold text-slate-800">Gross Profit</span>
-              <span className="font-bold text-emerald-600">${pl.grossProfit.toLocaleString()}</span>
-            </div>
-          </div>
-
-          {/* Expenses Section */}
-          <div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-200">
-              <span className="font-semibold text-slate-800">Operating Expenses</span>
-              <span className="font-semibold text-slate-800">${pl.totalExpenses.toLocaleString()}</span>
-            </div>
-            {Object.entries(pl.operatingExpenses).map(([key, value]: any) => (
-              <div key={key} className="flex justify-between items-center py-2 text-slate-600 pl-4">
-                <span className="capitalize">{key}</span>
-                <span>${value.toLocaleString()}</span>
+      ) : (
+        <div className="mt-8 space-y-8">
+          {/* High-level metrics */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5 text-emerald-600">
+                <ArrowUpRight className="w-24 h-24" />
               </div>
-            ))}
+              <p className="text-sm font-medium text-slate-500 mb-2">Total Revenue</p>
+              <h3 className="text-3xl font-bold text-slate-800">${totalRevenue.toLocaleString()}</h3>
+              <p className="text-xs text-emerald-600 flex items-center mt-2 font-medium">
+                <ArrowUpRight className="w-3 h-3 mr-1" />
+                Operating Income
+              </p>
+            </div>
+            
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-5 text-red-600">
+                <ArrowDownRight className="w-24 h-24" />
+              </div>
+              <p className="text-sm font-medium text-slate-500 mb-2">Total Expenses</p>
+              <h3 className="text-3xl font-bold text-slate-800">${totalExpenses.toLocaleString()}</h3>
+              <p className="text-xs text-red-600 flex items-center mt-2 font-medium">
+                <ArrowDownRight className="w-3 h-3 mr-1" />
+                Operating Costs
+              </p>
+            </div>
+            
+            <div className="p-6 bg-slate-800 rounded-2xl shadow-md border border-slate-700 relative overflow-hidden lg:col-span-2">
+              <div className="absolute top-0 right-0 p-4 opacity-10 text-white">
+                <Building2 className="w-32 h-32" />
+              </div>
+              <p className="text-sm font-medium text-slate-400 mb-2">Net Profit</p>
+              <div className="flex items-end gap-4">
+                <h3 className={`text-5xl font-black tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  ${netProfit.toLocaleString()}
+                </h3>
+                <div className="mb-2 px-3 py-1 rounded-full bg-slate-700 text-sm font-medium text-white border border-slate-600">
+                  {margin.toFixed(1)}% Margin
+                </div>
+              </div>
+              <p className="text-sm text-slate-400 mt-4 max-w-sm">
+                This is your final bottom line after subtracting all expenses from your total revenue.
+              </p>
+            </div>
           </div>
 
-          {/* Net Income */}
-          <div className="flex justify-between items-center py-4 px-4 bg-slate-800 text-white rounded-xl mt-8">
-            <span className="font-bold text-lg">Net Income</span>
-            <span className="font-bold text-2xl text-emerald-400">${pl.netIncome.toLocaleString()}</span>
+          {/* P&L Statement breakdown */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-blue-600" />
+                P&L Statement Breakdown
+              </h3>
+              <button className="text-sm font-medium text-blue-600 hover:underline">Export PDF</button>
+            </div>
+            <div className="p-0">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-500 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-800">Gross Revenue</td>
+                    <td className="px-6 py-4 font-medium text-slate-800 text-right">${totalRevenue.toLocaleString()}</td>
+                  </tr>
+                  <tr className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-slate-800">Operating Expenses</td>
+                    <td className="px-6 py-4 font-medium text-red-600 text-right">-${totalExpenses.toLocaleString()}</td>
+                  </tr>
+                  <tr className="bg-slate-50 border-t-2 border-slate-200">
+                    <td className="px-6 py-4 font-bold text-slate-900 text-lg">Net Income</td>
+                    <td className={`px-6 py-4 font-bold text-lg text-right ${netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      ${netProfit.toLocaleString()}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </DashboardLayout>
   );
 }

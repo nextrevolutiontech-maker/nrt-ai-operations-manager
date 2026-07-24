@@ -1,94 +1,152 @@
 'use client';
 
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { DashboardLayout } from '../../../components/layouts/DashboardLayout';
 import { PageHeader } from '../../../components/shared/PageHeader';
+import { useQuery } from '@tanstack/react-query';
 import { reportsService } from '../../../services/reports';
-import { AppTable, ColumnDef } from '../../../components/tables/AppTable';
-import { Package, AlertTriangle, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { inventoryService } from '../../../services/inventory';
+import { PackageSearch, AlertTriangle, BoxSelect, ShieldAlert } from 'lucide-react';
 
 export default function InventoryValuationPage() {
-  const { data: valData, isLoading: valLoading } = useQuery({ 
-    queryKey: ['inventory-valuation'], 
+  const { data: analyticsData, isLoading: aLoading } = useQuery({ 
+    queryKey: ['inventory-analytics'], 
     queryFn: () => reportsService.getInventoryValuation() 
   });
+  
+  const { data: inventoryData, isLoading: iLoading } = useQuery({
+    queryKey: ['inventory-list'],
+    queryFn: () => inventoryService.getAll()
+  });
 
-  const dummyData = [
-    { productName: 'Wireless Mouse', sku: 'WM-001', warehouse: 'Main Depot', quantity: 150, unitCost: 15.50, totalValue: 2325 },
-    { productName: 'Mechanical Keyboard', sku: 'MK-002', warehouse: 'Main Depot', quantity: 45, unitCost: 65.00, totalValue: 2925 },
-    { productName: '27" 4K Monitor', sku: 'MN-274K', warehouse: 'East Wing', quantity: 12, unitCost: 320.00, totalValue: 3840 },
-    { productName: 'USB-C Cable', sku: 'USBC-1M', warehouse: 'West Wing', quantity: 500, unitCost: 2.50, totalValue: 1250 },
-  ];
-
-  const tableData = valData?.data?.length > 0 ? valData.data : dummyData;
-  const grandTotal = tableData.reduce((acc: number, curr: any) => acc + curr.totalValue, 0);
-
-  const columns: ColumnDef<any>[] = [
-    { label: 'Product Name', key: 'productName' },
-    { label: 'SKU', key: 'sku', render: (row) => <span className="text-slate-500">{row.sku}</span> },
-    { label: 'Warehouse', key: 'warehouse' },
-    { label: 'Quantity', key: 'quantity', render: (row) => <span className="font-medium">{row.quantity}</span> },
-    { label: 'Unit Cost', key: 'unitCost', render: (row) => `$${row.unitCost.toFixed(2)}` },
-    { label: 'Total Value', key: 'totalValue', render: (row) => <span className="font-bold text-slate-800">${row.totalValue.toFixed(2)}</span> },
-  ];
+  const lowStock = analyticsData?.data?.lowStock || 0;
+  const outOfStock = analyticsData?.data?.outOfStock || 0;
+  const totalStockQuantity = analyticsData?.data?.totalStockQuantity || 0;
+  
+  // Calculate total valuation
+  const totalValuation = inventoryData?.data?.reduce((acc: number, item: any) => {
+    return acc + (item.availableStock * (item.product?.cost || 0));
+  }, 0) || 0;
 
   return (
     <DashboardLayout>
-      <div className="mb-6">
-        <Link href="/reports" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Back to Reports Hub
-        </Link>
-        <PageHeader 
-          title="Inventory Valuation" 
-          description="Real-time breakdown of stock quantities and their financial value."
-        />
-      </div>
+      <PageHeader 
+        title="Inventory Valuation" 
+        description="Monitor stock levels, warehouse distribution, and total asset value."
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-4 bg-indigo-100 text-indigo-600 rounded-full">
-            <Package className="w-6 h-6" />
+      {(aLoading || iLoading) ? (
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-slate-500 animate-pulse">Loading inventory data...</p>
+        </div>
+      ) : (
+        <div className="mt-8 space-y-6">
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Total Items</p>
+                  <h3 className="text-3xl font-bold text-slate-800">{totalStockQuantity}</h3>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                  <BoxSelect className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Total Valuation</p>
+                  <h3 className="text-3xl font-bold text-slate-800">${totalValuation.toLocaleString()}</h3>
+                </div>
+                <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600">
+                  <PackageSearch className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Low Stock</p>
+                  <h3 className="text-3xl font-bold text-amber-600">{lowStock}</h3>
+                </div>
+                <div className="p-3 bg-amber-100 rounded-xl text-amber-600">
+                  <AlertTriangle className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Out of Stock</p>
+                  <h3 className="text-3xl font-bold text-red-600">{outOfStock}</h3>
+                </div>
+                <div className="p-3 bg-red-100 rounded-xl text-red-600">
+                  <ShieldAlert className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Total Items in Stock</p>
-            <h3 className="text-2xl font-bold text-slate-800">
-              {tableData.reduce((acc: number, curr: any) => acc + curr.quantity, 0)}
-            </h3>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-6 py-5 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-800">Inventory Valuation Register</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/50">
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Warehouse</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Quantity</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Unit Cost</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Value</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {inventoryData?.data?.map((item: any) => {
+                    const cost = item.product?.cost || 0;
+                    const value = item.availableStock * cost;
+                    const minStock = item.product?.minStockLevel || 0;
+                    
+                    let statusBadge = <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">In Stock</span>;
+                    if (item.availableStock === 0) {
+                      statusBadge = <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">Out of Stock</span>;
+                    } else if (item.availableStock <= minStock) {
+                      statusBadge = <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded text-xs font-medium">Low Stock</span>;
+                    }
+
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-slate-800">{item.product?.name}</div>
+                          <div className="text-xs text-slate-400">{item.product?.sku}</div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-600">{item.warehouse?.name}</td>
+                        <td className="px-6 py-4 font-medium text-slate-800">{item.availableStock}</td>
+                        <td className="px-6 py-4 text-sm text-slate-600">${cost.toLocaleString()}</td>
+                        <td className="px-6 py-4 font-medium text-slate-800">${value.toLocaleString()}</td>
+                        <td className="px-6 py-4">{statusBadge}</td>
+                      </tr>
+                    );
+                  })}
+                  {(!inventoryData?.data || inventoryData.data.length === 0) && (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-10 text-center text-slate-500">
+                        No inventory data available.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-4 bg-emerald-100 text-emerald-600 rounded-full">
-            <span className="text-xl font-bold">$</span>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Total Inventory Value</p>
-            <h3 className="text-2xl font-bold text-slate-800">
-              ${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </h3>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-4 bg-red-100 text-red-600 rounded-full">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-slate-500">Low Stock Alerts</p>
-            <h3 className="text-2xl font-bold text-red-600">3</h3>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-bold text-slate-800">Valuation by Product</h2>
-        </div>
-        <AppTable columns={columns} data={tableData} isLoading={valLoading} />
-      </div>
+      )}
     </DashboardLayout>
   );
 }

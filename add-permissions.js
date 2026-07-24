@@ -11,7 +11,10 @@ async function main() {
     'read:workflows', 'manage:workflows',
     'read:report', 'manage:report',
     'export:report', 'manage:notifications',
-    'create:dashboard'
+    'create:dashboard', 'read:dashboard',
+    'create:ai-sessions', 'read:ai-sessions',
+    'create:ai-action-approvals', 'read:ai-action-approvals',
+    'read:ai-dashboard', 'manage:ai-demo'
   ];
 
   // get Admin role

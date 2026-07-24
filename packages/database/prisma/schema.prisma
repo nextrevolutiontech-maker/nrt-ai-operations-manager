@@ -23,6 +23,14 @@ model Company {
   createdBy String?   @map("created_by") @db.Uuid
   updatedBy String?   @map("updated_by") @db.Uuid
 
+  // Settings
+  taxId     String?   @map("tax_id") @db.VarChar(100)
+  email     String?   @db.VarChar(255)
+  phone     String?   @db.VarChar(50)
+  address   String?   @db.Text
+  currency  String    @default("USD") @db.VarChar(10)
+  timezone  String    @default("America/New_York") @db.VarChar(50)
+
   // Relations
   users             User[]
   roles             Role[]
