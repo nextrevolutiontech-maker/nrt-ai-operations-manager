@@ -181,7 +181,9 @@ export function AiVoiceButton() {
     }
   };
 
-  const startVoiceMode = () => {
+  const [voiceBusinessStep, setVoiceBusinessStep] = useState<string>('Checking Inventory...');
+
+  const startVoiceMode = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert('Your browser does not support Speech Recognition. Please use Google Chrome or Edge.');
@@ -190,6 +192,20 @@ export function AiVoiceButton() {
 
     setIsVoiceMode(true);
     setIsOpen(false);
+
+    // Dynamic Business Context Steps Sequence
+    const businessSteps = [
+      'Checking Inventory...',
+      'Reading Warehouse Karachi & Lahore...',
+      'Analysing Sales & Risk...',
+      'Preparing Recommendation...',
+    ];
+
+    for (let i = 0; i < businessSteps.length; i++) {
+      setVoiceBusinessStep(businessSteps[i]);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
     startVoiceRecognitionSilently();
   };
 
@@ -300,8 +316,8 @@ export function AiVoiceButton() {
             </div>
 
             <div className="mt-4 flex items-center gap-2">
-              <p className="text-fuchsia-300/80 text-xs font-semibold tracking-widest uppercase">
-                {isSpeaking ? '🗣️ AI Speaking...' : isListening ? '🎙️ Listening...' : isLoading ? '⏳ Processing...' : 'Tap Mic to Speak'}
+              <p className="text-fuchsia-300/90 text-xs font-bold tracking-wider uppercase animate-pulse">
+                {isSpeaking ? '🗣️ AI Speaking...' : isListening ? '🎙️ Listening...' : isLoading ? `⏳ ${voiceBusinessStep}` : 'Tap Mic to Speak'}
               </p>
               {isSpeaking && (
                 <button onClick={stopSpeaking} className="p-1 bg-white/10 hover:bg-white/20 text-xs text-white rounded-md transition-colors" title="Stop Voice">
