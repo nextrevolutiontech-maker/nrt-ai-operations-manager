@@ -158,6 +158,47 @@ export default function AiWorkspacePage() {
     }
   };
 
+  // Clean Markdown & Asterisks formatter
+  const renderFormattedText = (rawText: string) => {
+    if (!rawText) return null;
+    const lines = rawText.split('\n');
+    return (
+      <div className="space-y-1.5">
+        {lines.map((line, lIdx) => {
+          const trimmed = line.trim();
+          if (!trimmed) return null;
+
+          let cleanLine = trimmed.replace(/^#+\s?/, ''); // remove ### headers
+          const isBullet = cleanLine.startsWith('- ') || cleanLine.startsWith('* ');
+          if (isBullet) {
+            cleanLine = cleanLine.substring(2);
+          }
+
+          // Split line by ** text **
+          const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
+
+          return (
+            <div key={lIdx} className={`leading-relaxed ${isBullet ? 'flex items-start gap-1.5 pl-1' : ''}`}>
+              {isBullet && <span className="text-purple-400 font-bold">•</span>}
+              <div>
+                {parts.map((part, pIdx) => {
+                  if (part.startsWith('**') && part.endsWith('**')) {
+                    return (
+                      <strong key={pIdx} className="font-bold text-amber-300">
+                        {part.slice(2, -2)}
+                      </strong>
+                    );
+                  }
+                  return part;
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Submit Prompt with sequential steps & Language Matching
   const handleSendPrompt = async (promptText?: string) => {
     const textToSend = promptText || inputPrompt;
@@ -377,7 +418,7 @@ export default function AiWorkspacePage() {
                           : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow-xl'
                       }`}
                     >
-                      {msg.text}
+                      {renderFormattedText(msg.text)}
                     </div>
 
                     {/* Structured AI Analysis Cards */}
