@@ -69,13 +69,18 @@ export function AiVoiceButton() {
     const voices = window.speechSynthesis.getVoices();
 
     if (isUrduScript) {
-      const urduVoice = voices.find(v => v.lang.includes('ur') || v.lang.includes('hi') || v.name.includes('Urdu') || v.name.includes('Hindi'));
+      const urduVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online')) && (v.lang.includes('ur') || v.lang.includes('hi')))
+        || voices.find(v => v.lang.includes('ur') || v.lang.includes('hi') || v.name.includes('Urdu') || v.name.includes('Hindi'));
       if (urduVoice) utterance.voice = urduVoice;
       utterance.lang = urduVoice?.lang || 'ur-PK';
     } else {
-      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(languageRef.current.split('-')[0]) || v.name.includes('Google') || v.name.includes('Natural')) || voices[0];
+      // Prioritize 100% FREE Microsoft Natural Online / Google Neural Voices
+      const bestVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural')) && v.lang.toLowerCase().startsWith('en'))
+        || voices.find(v => v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online'))
+        || voices.find(v => v.lang.toLowerCase().startsWith(languageRef.current.split('-')[0]))
+        || voices[0];
       if (bestVoice) utterance.voice = bestVoice;
-      utterance.lang = languageRef.current;
+      utterance.lang = bestVoice?.lang || languageRef.current;
     }
 
     utterance.rate = 0.95;
