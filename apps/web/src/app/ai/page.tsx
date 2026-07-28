@@ -135,26 +135,81 @@ export default function AiWorkspacePage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isProcessing, thinkingStep]);
 
-  // ChatGPT Voice sequential steps simulation
-  const handleVoiceToggle = async () => {
+  const recognitionRef = useRef<any>(null);
+
+  const speakText = (textToSpeak: string) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const cleanText = textToSpeak
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/#+\s?/g, '')
+      .replace(/\[[^\]]+\]/g, '')
+      .replace(/⚠️|⚡|✅|❌|🔍|💡|📊|📈|📉|🤖|✨|🟢|🔴|🟡/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .trim();
+
+    if (!cleanText) return;
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    const voices = window.speechSynthesis.getVoices();
+    const bestVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural'))) || voices[0];
+    if (bestVoice) utterance.voice = bestVoice;
+    utterance.rate = 0.95;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const handleVoiceToggle = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Browser does not support Voice Speech Recognition. Please use Chrome or Edge.');
+      return;
+    }
+
     if (isVoiceActive) {
       setIsVoiceActive(false);
       setVoiceStatus('Tap Mic to Speak');
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
       return;
     }
 
     setIsVoiceActive(true);
-    const steps = [
-      'Listening...',
-      'Processing ERP Data...',
-      'Checking Inventory...',
-      'Preparing Recommendation...',
-      'Speaking...',
-    ];
+    setVoiceStatus('Listening...');
 
-    for (let i = 0; i < steps.length; i++) {
-      setVoiceStatus(steps[i]);
-      await new Promise((res) => setTimeout(res, 600));
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ur-PK';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setVoiceStatus('Listening (Speak Now)...');
+      };
+
+      recognition.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript && transcript.trim()) {
+          setVoiceStatus(`Processing: "${transcript}"...`);
+          setInputPrompt(transcript);
+          await handleSendPrompt(transcript);
+          setVoiceStatus('Ready');
+        }
+      };
+
+      recognition.onerror = () => {
+        setIsVoiceActive(false);
+        setVoiceStatus('Tap Mic to Speak');
+      };
+
+      recognition.onend = () => {
+        setIsVoiceActive(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      setIsVoiceActive(false);
+      setVoiceStatus('Tap Mic to Speak');
     }
   };
 
@@ -245,6 +300,7 @@ export default function AiWorkspacePage() {
           },
         },
       ]);
+      speakText(aiResponseText);
     } catch {
       setMessages((prev) => [
         ...prev,
