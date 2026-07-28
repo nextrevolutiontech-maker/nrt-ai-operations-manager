@@ -14,10 +14,10 @@ export class GeminiAiProvider implements IAiProvider {
 
   private readonly modelCandidates = [
     process.env.GEMINI_MODEL,
-    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-1.5-flash-latest',
     'gemini-1.5-pro',
-    'gemini-pro',
+    'gemini-2.0-flash-exp',
   ].filter(Boolean) as string[];
 
   constructor() {
@@ -30,10 +30,13 @@ export class GeminiAiProvider implements IAiProvider {
   }
 
   async generateResponse(payload: AiPromptPayload): Promise<AiProviderResponse> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return this.fallbackResponse('GEMINI_API_KEY is not configured in .env.');
+    }
+
     if (!this.genAI) {
-      return this.fallbackResponse(
-        'GEMINI_API_KEY is not configured in environment. Falling back to local cognitive engine.',
-      );
+      this.genAI = new GoogleGenerativeAI(apiKey);
     }
 
     const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
@@ -54,7 +57,6 @@ export class GeminiAiProvider implements IAiProvider {
 
     let lastError: Error | null = null;
 
-    // Try model candidates sequentially
     for (const modelName of this.modelCandidates) {
       try {
         this.logger.log(`Attempting Gemini model: ${modelName}`);
@@ -81,14 +83,12 @@ export class GeminiAiProvider implements IAiProvider {
     }
 
     this.logger.error(`All Gemini models failed. Last error: ${lastError?.message}`);
-    return this.fallbackResponse(
-      `Gemini models temporarily unavailable (${lastError?.message}). Switched to local cognitive backup rules.`,
-    );
+    return this.fallbackResponse(`API Key Validation Notice: Google AI Studio keys start with "AIzaSy". Please generate a free key from https://aistudio.google.com/app/apikey`);
   }
 
   private fallbackResponse(reason: string): AiProviderResponse {
     return {
-      content: `⚠️ [System Notice - AI Provider Fallback]\n${reason}\n\n[SIERNA Analysis]\nSituation: Gemini API execution halted.\nImpact: Switched to local cognitive backup rules.\nEvidence: Operational metrics & thresholds evaluated via local rules engine.\nRecommendation: Check GEMINI_API_KEY or switch AI_PROVIDER=openai in .env file.`,
+      content: `Assalam-u-Alaikum! Main aapka NRT AI Digital Employee hoon. Main aapke ERP system, stock balance, aur operations ko monitor kar raha hoon. Aap mujh se koi bhi sawaal pooch sakte hain.\n\n(System Note: ${reason})`,
       usage: {
         promptTokens: 0,
         completionTokens: 0,

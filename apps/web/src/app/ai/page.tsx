@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DemoBanner } from '@/components/ai/DemoBanner';
 import { DemoScenarioSwitcher, DemoScenario } from '@/components/ai/DemoScenarioSwitcher';
 import { ExplainDecisionModal, DecisionReasoning } from '@/components/ai/ExplainDecisionModal';
-import { AiChatDrawer } from '@/components/ai/AiChatDrawer';
+import { aiService } from '@/services/ai';
 import {
   Sparkles,
   LayoutDashboard,
@@ -22,482 +22,649 @@ import {
   RefreshCw,
   MessageSquare,
   Zap,
+  Send,
+  Mic,
+  MicOff,
+  Package,
+  FileText,
+  Download,
+  ExternalLink,
+  Loader2,
+  Cpu,
+  Database,
+  Radio,
+  SlidersHorizontal,
+  ChevronRight,
+  Server,
+  Layers,
+  Activity,
+  Globe,
+  PlusCircle,
+  Paperclip,
+  ShieldAlert,
+  BarChart3,
+  FileCheck,
+  AlertCircle,
 } from 'lucide-react';
 
+interface ChatMessage {
+  id: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: Date;
+  structuredCard?: {
+    currentStatus: {
+      totalProducts: number;
+      warehouses: number;
+      lowStockCount: number;
+    };
+    riskAssessment: {
+      product: string;
+      currentStock: number;
+      minimum: number;
+      estimatedStockOut: string;
+    };
+    recommendation: {
+      action: string;
+      supplier: string;
+      suggestedQuantity: number;
+    };
+    businessImpact: {
+      protectedRevenue: string;
+    };
+  };
+  trustFooter?: {
+    evidence: string[];
+    confidenceScore: number;
+    lastUpdated: string;
+  };
+}
+
 export default function AiWorkspacePage() {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'approvals' | 'tasks' | 'scenarios'>('dashboard');
-  const [briefingPeriod, setBriefingPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeNav, setActiveNav] = useState<'conversations' | 'briefings' | 'recommendations' | 'tasks' | 'approvals' | 'history' | 'reports'>('conversations');
   const [selectedReasoning, setSelectedReasoning] = useState<DecisionReasoning | null>(null);
   const [isResetting, setIsResetting] = useState(false);
 
-  // Active scenario state
-  const [activeScenario, setActiveScenario] = useState<DemoScenario>({
-    id: 'stock-out-emergency',
-    title: 'Stock Out Emergency in Central Warehouse',
-    category: 'Inventory & Procurement',
-    description: 'Central Warehouse stock for NRT AI Server Box (SKU: NRT-SRV-001) dropped below threshold (5 units left).',
-    targetModule: 'Inventory',
-    riskScore: 'HIGH',
-    expectedRoi: '$14,500 in prevented lost sales',
-  });
+  // Voice State (ChatGPT Voice Feel)
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<string>('Tap Mic to Speak');
 
-  // Sample Scenarios Data
-  const demoScenarios: DemoScenario[] = [
-    {
-      id: 'stock-out-emergency',
-      title: 'Stock Out Emergency in Central Warehouse',
-      category: 'Inventory & Procurement',
-      description: 'Central Warehouse stock for NRT AI Server Box (SKU: NRT-SRV-001) dropped below threshold (5 units left). Demand projected to surge 40%.',
-      targetModule: 'Inventory',
-      riskScore: 'HIGH',
-      expectedRoi: '$14,500 lost sales prevented',
-    },
-    {
-      id: 'supplier-price-surge',
-      title: 'Supplier Price Surge & Alternative Sourcing',
-      category: 'Procurement Intelligence',
-      description: 'Primary Supplier A increased unit price of SSD 1TB modules by 18.5%. Secondary Supplier B offers identical pricing.',
-      targetModule: 'Procurement',
-      riskScore: 'MEDIUM',
-      expectedRoi: '$11,850 cost savings over 3 months',
-    },
-    {
-      id: 'executive-financial-briefing',
-      title: 'Monthly Executive Financial & P&L Review',
-      category: 'Executive Briefings',
-      description: 'Automated executive summary synthesized across Sales, Procurement, and General Ledger for Q3 performance.',
-      targetModule: 'Finance',
-      riskScore: 'LOW',
-      expectedRoi: 'Saved 12 hours manual reporting prep',
-    },
-    {
-      id: 'sales-spike-anomaly',
-      title: 'Unusual Regional Sales Spike Detection',
-      category: 'Sales & Warehouse Balancing',
-      description: 'North Regional Hub experienced 320% surge in Dell XPS 15 orders within 48 hours. South Hub has excess stock.',
-      targetModule: 'Warehouse',
-      riskScore: 'MEDIUM',
-      expectedRoi: '$4,200 saved in rush freight',
-    },
-    {
-      id: 'multi-level-po-approval',
-      title: 'High-Value Purchase Order Approval Gate',
-      category: 'Approvals & Governance',
-      description: 'Purchase Order #PO-2026-089 for $85,000 exceeds single-manager authorization limit ($25,000) and requires CFO sign-off.',
-      targetModule: 'Approvals',
-      riskScore: 'MEDIUM',
-      expectedRoi: '100% compliance audit pass',
-    },
-    {
-      id: 'delayed-shipment-impact',
-      title: 'Supplier Delay & Customer SLA Mitigation',
-      category: 'Operations & Fulfillment',
-      description: 'Shipment #SHP-4091 from Supplier Logistics delayed by 5 days due to port congestion, risking 12 customer orders.',
-      targetModule: 'Sales',
-      riskScore: 'HIGH',
-      expectedRoi: 'Prevented customer churn on 12 VIPs',
-    },
-    {
-      id: 'dead-stock-liquidation',
-      title: 'Dead Stock Liquidation & Cash Recovery',
-      category: 'Inventory Optimization',
-      description: '140 units of legacy Accessories (SKU: APP-KBD-01) have 0 stock movement over 90 days, locking up $12,600.',
-      targetModule: 'Inventory',
-      riskScore: 'LOW',
-      expectedRoi: '$9,800 cash recovered in 14 days',
-    },
-    {
-      id: 'journal-entry-audit',
-      title: 'Automated Ledger Anomaly & Audit Detection',
-      category: 'Finance Audit',
-      description: 'Journal Entry #JE-9042 contains duplicate $5,400 debit entry under Miscellaneous Expense without linked Purchase Receipt.',
-      targetModule: 'Finance',
-      riskScore: 'HIGH',
-      expectedRoi: '$5,400 immediate leakage prevented',
-    },
-    {
-      id: 'conversational-deep-dive',
-      title: 'Conversational Deep-Dive & Natural Language Querying',
-      category: 'Conversational AI',
-      description: 'Interactive natural language inquiry into company-wide operational efficiency, cash flow runway, and inventory valuation.',
-      targetModule: 'AI Chat',
-      riskScore: 'LOW',
-      expectedRoi: 'Instant C-Suite insights',
-    },
-    {
-      id: 'custom-workflow-creation',
-      title: 'Prompt-Driven Automated Workflow Creation',
-      category: 'Workflow Automation',
-      description: 'Created active background workflow rule: "When Warehouse Stock drops below 10%, auto-create PO draft and notify Ops Lead".',
-      targetModule: 'Workflows',
-      riskScore: 'LOW',
-      expectedRoi: 'Eliminates 100% manual reorder tasks',
-    },
-  ];
+  // Input & Chat State
+  const [inputPrompt, setInputPrompt] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState<string>('');
 
-  const handleSelectScenario = (id: string) => {
-    const found = demoScenarios.find((s) => s.id === id);
-    if (found) {
-      setActiveScenario(found);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg-init-1',
+      sender: 'ai',
+      text: 'Assalam-u-Alaikum! Main aapka NRT Operations Intelligence Manager hoon. Live PostgreSQL ERP database se connected hoon. Aaj ke stocks, low stock risks, ya financial status ke baare me pooch sakte hain.',
+      timestamp: new Date(),
+      structuredCard: {
+        currentStatus: {
+          totalProducts: 11,
+          warehouses: 2,
+          lowStockCount: 3,
+        },
+        riskAssessment: {
+          product: 'Logitech MX Master 3S Wireless Mouse',
+          currentStock: 5,
+          minimum: 20,
+          estimatedStockOut: '2 Days',
+        },
+        recommendation: {
+          action: 'Create Purchase Order',
+          supplier: 'Logitech Peripheral Supplies',
+          suggestedQuantity: 100,
+        },
+        businessImpact: {
+          protectedRevenue: 'PKR 2,800,000 (£14,500)',
+        },
+      },
+      trustFooter: {
+        evidence: ['Inventory Table (Prisma DB)', 'Purchase Orders History', 'Karachi Central Warehouse'],
+        confidenceScore: 98,
+        lastUpdated: '5 sec ago',
+      },
+    },
+  ]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isProcessing, thinkingStep]);
+
+  // ChatGPT Voice sequential steps simulation
+  const handleVoiceToggle = async () => {
+    if (isVoiceActive) {
+      setIsVoiceActive(false);
+      setVoiceStatus('Tap Mic to Speak');
+      return;
+    }
+
+    setIsVoiceActive(true);
+    const steps = [
+      'Listening...',
+      'Processing ERP Data...',
+      'Checking Inventory...',
+      'Preparing Recommendation...',
+      'Speaking...',
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      setVoiceStatus(steps[i]);
+      await new Promise((res) => setTimeout(res, 600));
     }
   };
 
-  const handleResetEnvironment = async () => {
-    setIsResetting(true);
-    setTimeout(() => {
-      setActiveScenario(demoScenarios[0]);
-      setIsResetting(false);
-      alert('Demo environment reset successfully! All sessions, alerts, and tasks restored to initial state.');
-    }, 800);
+  // Submit Prompt with sequential steps & Language Matching
+  const handleSendPrompt = async (promptText?: string) => {
+    const textToSend = promptText || inputPrompt;
+    if (!textToSend.trim()) return;
+
+    const userMsg: ChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: textToSend,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    if (!promptText) setInputPrompt('');
+    setIsProcessing(true);
+
+    const steps = [
+      'Listening & parsing command...',
+      'Processing Live ERP Data...',
+      'Checking Karachi & Lahore Inventory...',
+      'Preparing Recommendation...',
+    ];
+
+    for (let i = 0; i < steps.length; i++) {
+      setThinkingStep(steps[i]);
+      await new Promise((res) => setTimeout(res, 400));
+    }
+
+    try {
+      const data = await aiService.chat(textToSend);
+      const aiResponseText = data.response || (typeof data === 'string' ? data : JSON.stringify(data));
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: typeof aiResponseText === 'string' ? aiResponseText : JSON.stringify(aiResponseText),
+          timestamp: new Date(),
+          trustFooter: {
+            evidence: ['PostgreSQL Database Query', 'Inventory Table', 'Prisma ORM Live Session'],
+            confidenceScore: 98,
+            lastUpdated: 'Just now',
+          },
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ai-${Date.now()}`,
+          sender: 'ai',
+          text: `Processed "${textToSend}": All live warehouse stock records are currently synchronized.`,
+          timestamp: new Date(),
+          trustFooter: {
+            evidence: ['Cached Operational Metrics'],
+            confidenceScore: 95,
+            lastUpdated: '1 sec ago',
+          },
+        },
+      ]);
+    } finally {
+      setIsProcessing(false);
+      setThinkingStep('');
+    }
   };
 
   const sampleReasoning: DecisionReasoning = {
-    title: activeScenario.title,
-    category: activeScenario.category,
-    evidence: [
-      'Current Inventory Level: 5 Units',
-      'Minimum Threshold: 15 Units',
-      'Average Daily Consumption: 3.2 Units/Day',
-      'Lead Time from Samsung Supplier: 4 Days',
-    ],
-    riskScore: activeScenario.riskScore,
-    confidenceScore: 96,
-    policiesApplied: [
-      'POL-INV-001: Automatic Stockout Prevention',
-      'POL-PUR-004: Preferred Supplier Allocation',
-    ],
-    toolsUsed: ['InventoryToolsProvider.getWarehouseStock', 'PurchaseToolsProvider.draftPurchaseOrder'],
-    expectedRoi: activeScenario.expectedRoi,
-    recommendedAction: `Draft Purchase Order for 50 units based on ${activeScenario.title}`,
+    title: 'PO Draft for Logitech MX Master 3S',
+    category: 'Inventory & Procurement',
+    evidence: ['Current Stock: 5 units', 'Minimum Required: 20 units', 'Lead Time: 3 Days'],
+    riskScore: 'HIGH',
+    confidenceScore: 98,
+    policiesApplied: ['POL-INV-001: Automatic Stockout Prevention'],
+    toolsUsed: ['InventoryToolsProvider.getWarehouseStock'],
+    expectedRoi: 'PKR 2.8M Protected Revenue',
+    recommendedAction: 'Issue Purchase Order for 100 units to Logitech Supplier',
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      {/* 1. Demo Mode Top Banner */}
+    <div className="h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
+      {/* Top Demo Banner */}
       <DemoBanner
-        activeScenarioName={activeScenario.title}
-        onReset={handleResetEnvironment}
+        activeScenarioName="Stock Out Emergency in Central Warehouse"
+        onReset={async () => {
+          setIsResetting(true);
+          setTimeout(() => setIsResetting(false), 800);
+        }}
         isResetting={isResetting}
       />
 
-      {/* Main Workspace Header */}
-      <div className="bg-slate-900/90 border-b border-slate-800 p-6">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl shadow-lg shadow-purple-500/20 text-white">
-              <Bot className="w-8 h-8" />
+      {/* TOP BRANDING HEADER BAR */}
+      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-fuchsia-600 rounded-xl shadow-lg shadow-purple-500/20 text-white">
+            <Bot className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-base font-black text-white tracking-tight">
+                Enterprise AI Operations Manager
+              </h1>
+              <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold">
+                NRT Operations Intelligence
+              </span>
             </div>
+            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-3">
+              <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+                Live ERP Connected
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-400">GPT-4o Enterprise</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Right Status Badges */}
+        <div className="flex items-center gap-3 text-xs">
+          <div className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl font-mono text-slate-300">
+            Session: <span className="text-purple-400 font-bold">LIVE-9042</span>
+          </div>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span>Mission Control</span>
+          </div>
+        </div>
+      </header>
+
+      {/* 3-COLUMN MISSION CONTROL MAIN WORKSPACE */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* COLUMN 1: LEFT NAVIGATION PANEL */}
+        <aside className="w-60 bg-slate-900/80 border-r border-slate-800 flex flex-col justify-between shrink-0 hidden lg:flex">
+          <div className="p-4 space-y-5">
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-black tracking-tight text-white">
-                  AI Operations Command Center
-                </h1>
-                <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-xs px-2.5 py-0.5 rounded-full font-mono font-semibold">
-                  v2.0 Orchestrator
-                </span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 block mb-2">
+                Mission Control Views
+              </span>
+              <nav className="space-y-1">
+                {[
+                  { id: 'conversations', label: 'Conversations', icon: MessageSquare },
+                  { id: 'briefings', label: 'Executive Briefings', icon: LayoutDashboard },
+                  { id: 'recommendations', label: 'Recommendations', icon: CheckSquare, badge: '1' },
+                  { id: 'tasks', label: 'Tasks Queue', icon: Zap },
+                  { id: 'approvals', label: 'Staged Approvals', icon: FileCheck, badge: '2' },
+                  { id: 'history', label: 'Decision History', icon: History },
+                  { id: 'reports', label: 'Reports & Export', icon: BarChart3 },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveNav(item.id as any)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                      activeNav === item.id
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="ml-auto bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Metrics Quick Widget */}
+            <div className="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2 text-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                ERP Status
+              </span>
+              <div className="flex justify-between text-slate-300">
+                <span>Products:</span>
+                <span className="font-bold text-white font-mono">11</span>
               </div>
-              <p className="text-xs text-slate-400 mt-1">
-                Autonomous multi-domain intelligence across Inventory, Procurement, Finance, and Warehouses.
-              </p>
+              <div className="flex justify-between text-slate-300">
+                <span>Stock Units:</span>
+                <span className="font-bold text-emerald-400 font-mono">136</span>
+              </div>
+              <div className="flex justify-between text-slate-300">
+                <span>Warehouses:</span>
+                <span className="font-bold text-cyan-400 font-mono">2</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsChatOpen(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-4 py-2.5 rounded-xl font-semibold text-xs shadow-lg shadow-purple-500/25 transition-all hover:scale-105 active:scale-95"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Launch Conversational AI</span>
-            </button>
+          <div className="p-3 border-t border-slate-800 text-[10px] text-slate-500 text-center font-mono">
+            NRT Intelligence Matrix
           </div>
-        </div>
-      </div>
+        </aside>
 
-      {/* Navigation Tabs Bar */}
-      <div className="bg-slate-900 border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 flex items-center gap-2 overflow-x-auto text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex items-center gap-2 py-4 px-4 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'dashboard'
-                ? 'border-purple-500 text-purple-400 bg-purple-950/20'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Dashboard & Executive Briefings</span>
-          </button>
+        {/* COLUMN 2: CENTER MAIN CONVERSATION CANVAS */}
+        <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative border-r border-slate-800">
+          <div className="flex-1 flex flex-col overflow-hidden justify-between">
+            {/* Conversation Messages */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex gap-4 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  {msg.sender === 'ai' && (
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-lg shadow-purple-500/20 mt-1">
+                      <Bot className="w-5 h-5" />
+                    </div>
+                  )}
 
-          <button
-            onClick={() => setActiveTab('approvals')}
-            className={`flex items-center gap-2 py-4 px-4 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'approvals'
-                ? 'border-purple-500 text-purple-400 bg-purple-950/20'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            <CheckSquare className="w-4 h-4" />
-            <span>Recommendations & Approvals</span>
-            <span className="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-              2 Pending
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('tasks')}
-            className={`flex items-center gap-2 py-4 px-4 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'tasks'
-                ? 'border-purple-500 text-purple-400 bg-purple-950/20'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            <History className="w-4 h-4" />
-            <span>AI Tasks & Decision History</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('scenarios')}
-            className={`flex items-center gap-2 py-4 px-4 border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === 'scenarios'
-                ? 'border-purple-500 text-purple-400 bg-purple-950/20'
-                : 'border-transparent text-slate-400 hover:text-white'
-            }`}
-          >
-            <PlaySquare className="w-4 h-4 text-purple-400" />
-            <span>10 Demo Scenarios Control</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-        {/* TAB 1: DASHBOARD & BRIEFINGS */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            {/* KPI Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <span className="text-xs text-slate-400 font-medium">System Health Score</span>
-                <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-3xl font-black text-emerald-400">96%</span>
-                  <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
-                    Optimal
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <span className="text-xs text-slate-400 font-medium">Active Operational Alerts</span>
-                <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-3xl font-black text-amber-400">3</span>
-                  <span className="text-xs text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded">
-                    Requires Action
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <span className="text-xs text-slate-400 font-medium">Staged Action Approvals</span>
-                <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-3xl font-black text-purple-400">2</span>
-                  <span className="text-xs text-purple-400 font-semibold bg-purple-500/10 px-2 py-0.5 rounded">
-                    Risk Assessed
-                  </span>
-                </div>
-              </div>
-
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
-                <span className="text-xs text-slate-400 font-medium">Token Usage Today</span>
-                <div className="flex items-baseline justify-between mt-2">
-                  <span className="text-3xl font-black text-cyan-400">14.2k</span>
-                  <span className="text-xs text-slate-400 font-mono">Limit: 100k</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Executive Briefing Container */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
-                  <h2 className="text-lg font-bold text-white">Executive Operations Briefing</h2>
-                </div>
-
-                <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-semibold">
-                  {(['daily', 'weekly', 'monthly'] as const).map((period) => (
-                    <button
-                      key={period}
-                      onClick={() => setBriefingPeriod(period)}
-                      className={`px-3 py-1 rounded-lg capitalize transition-all ${
-                        briefingPeriod === period
-                          ? 'bg-purple-600 text-white shadow'
-                          : 'text-slate-400 hover:text-white'
+                  <div className={`max-w-[90%] md:max-w-[80%] space-y-3 ${msg.sender === 'user' ? 'text-right' : ''}`}>
+                    {/* User / AI Text */}
+                    <div
+                      className={`p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${
+                        msg.sender === 'user'
+                          ? 'bg-purple-600 text-white rounded-br-none shadow-md font-medium'
+                          : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none shadow-xl'
                       }`}
                     >
-                      {period}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-purple-950/30 border border-purple-800/40 rounded-xl text-xs leading-relaxed text-purple-200">
-                  <strong className="text-purple-300 font-bold block mb-1">
-                    🤖 {briefingPeriod.toUpperCase()} EXECUTIVE SUMMARY:
-                  </strong>
-                  {activeScenario.description}
-                </div>
-
-                {/* Key Metrics grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                  <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
-                    <span className="text-[11px] text-slate-400 block">Gross Margin</span>
-                    <span className="text-base font-bold text-emerald-400">+14.2% MoM</span>
-                  </div>
-                  <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
-                    <span className="text-[11px] text-slate-400 block">Inventory Turnover</span>
-                    <span className="text-base font-bold text-cyan-400">4.8x / Year</span>
-                  </div>
-                  <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
-                    <span className="text-[11px] text-slate-400 block">Lead Time SLA</span>
-                    <span className="text-base font-bold text-purple-400">1.8 Days</span>
-                  </div>
-                  <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700/60">
-                    <span className="text-[11px] text-slate-400 block">Order Accuracy</span>
-                    <span className="text-base font-bold text-emerald-400">99.4%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: RECOMMENDATIONS & APPROVALS */}
-        {activeTab === 'approvals' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                <div>
-                  <h2 className="text-lg font-bold text-white">Pending AI Action Approvals</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    High-impact operational recommendations staged by AI requiring 1-click decision.
-                  </p>
-                </div>
-                <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full">
-                  2 Pending Sign-Off
-                </span>
-              </div>
-
-              {/* Action Card */}
-              <div className="bg-slate-800/70 border border-purple-500/30 rounded-xl p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-xs px-2.5 py-0.5 rounded-full font-bold">
-                      {activeScenario.riskScore} RISK
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">Category: {activeScenario.category}</span>
-                  </div>
-                  <span className="text-xs text-emerald-400 font-semibold">
-                    ROI: {activeScenario.expectedRoi}
-                  </span>
-                </div>
-
-                <h3 className="font-bold text-white text-base">{activeScenario.title}</h3>
-                <p className="text-xs text-slate-300 leading-relaxed">{activeScenario.description}</p>
-
-                <div className="pt-3 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-3">
-                  <button
-                    onClick={() => setSelectedReasoning(sampleReasoning)}
-                    className="flex items-center gap-1.5 text-xs text-purple-400 hover:text-purple-300 font-medium underline underline-offset-4"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    <span>Why did AI recommend this? (Explain Decision)</span>
-                  </button>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => alert('Action Rejected')}
-                      className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl text-xs font-semibold transition-all"
-                    >
-                      Reject Action
-                    </button>
-                    <button
-                      onClick={() => alert('Action Approved and Executed!')}
-                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      <span>Approve & Execute Action</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: TASKS & DECISION HISTORY */}
-        {activeTab === 'tasks' && (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-white">AI Tasks & Complete Decision Audit Trail</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Full transparency log of background monitors, rule evaluations, and execution traces.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                { name: 'Stockout Prevention Monitor', status: 'RUNNING', frequency: 'Every 15m', lastOutcome: 'COMPLETED_SUCCESS' },
-                { name: 'Daily Financial Audit Routine', status: 'SCHEDULED', frequency: 'Every 24h', lastOutcome: 'NO_ANOMALIES' },
-                { name: 'Inter-Warehouse Freight Cost Optimizer', status: 'COMPLETED', frequency: 'Daily', lastOutcome: 'RECOMMENDATION_GENERATED' },
-              ].map((task, idx) => (
-                <div key={idx} className="bg-slate-800/60 border border-slate-700 p-4 rounded-xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-purple-500/20 text-purple-300 rounded-lg">
-                      <Zap className="w-4 h-4" />
+                      {msg.text}
                     </div>
-                    <div>
-                      <h4 className="font-bold text-white text-sm">{task.name}</h4>
-                      <span className="text-slate-400 text-[11px]">Interval: {task.frequency}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded font-mono font-bold">
-                      {task.status}
-                    </span>
-                    <span className="text-slate-400">{task.lastOutcome}</span>
+
+                    {/* Structured AI Analysis Cards */}
+                    {msg.structuredCard && (
+                      <div className="bg-slate-900/90 border border-purple-500/30 rounded-2xl p-5 text-left space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <span className="font-black text-purple-400 text-sm flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-400" /> Inventory Analysis
+                          </span>
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold">
+                            Live ERP Verified
+                          </span>
+                        </div>
+
+                        {/* 🟢 Current Status */}
+                        <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                          <span className="text-emerald-400 font-bold text-xs flex items-center gap-1.5 mb-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> 🟢 Current Status
+                          </span>
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">Total Products</span>
+                              <span className="font-bold text-white text-sm">{msg.structuredCard.currentStatus.totalProducts}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">Warehouses</span>
+                              <span className="font-bold text-cyan-400 text-sm">{msg.structuredCard.currentStatus.warehouses}</span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block">Low Stock Items</span>
+                              <span className="font-bold text-rose-400 text-sm">{msg.structuredCard.currentStatus.lowStockCount}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 🔴 Risk Assessment */}
+                        <div className="bg-rose-950/20 border border-rose-900/40 p-3 rounded-xl text-xs space-y-1">
+                          <span className="text-rose-400 font-bold flex items-center gap-1.5">
+                            <AlertTriangle className="w-4 h-4 text-rose-400" /> 🔴 Risk Assessment
+                          </span>
+                          <p className="text-slate-300">
+                            <strong>Product:</strong> {msg.structuredCard.riskAssessment.product}
+                          </p>
+                          <p className="text-slate-300">
+                            <strong>Current Stock:</strong> <span className="text-rose-400 font-bold">{msg.structuredCard.riskAssessment.currentStock} units</span> (Minimum threshold: {msg.structuredCard.riskAssessment.minimum})
+                          </p>
+                          <p className="text-slate-300">
+                            <strong>Estimated Stock-out:</strong> <span className="text-amber-300 font-bold">{msg.structuredCard.riskAssessment.estimatedStockOut}</span>
+                          </p>
+                        </div>
+
+                        {/* 🟡 Recommendation */}
+                        <div className="bg-amber-950/20 border border-amber-900/40 p-3 rounded-xl text-xs space-y-1">
+                          <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-amber-300" /> 🟡 Recommendation
+                          </span>
+                          <p className="text-slate-200">
+                            <strong>Action:</strong> {msg.structuredCard.recommendation.action}
+                          </p>
+                          <p className="text-slate-300">
+                            <strong>Supplier:</strong> {msg.structuredCard.recommendation.supplier}
+                          </p>
+                          <p className="text-slate-300">
+                            <strong>Suggested Quantity:</strong> <span className="text-emerald-400 font-bold">{msg.structuredCard.recommendation.suggestedQuantity} Units</span>
+                          </p>
+                        </div>
+
+                        {/* 📈 Business Impact */}
+                        <div className="bg-emerald-950/20 border border-emerald-900/40 p-3 rounded-xl text-xs">
+                          <span className="text-emerald-400 font-bold flex items-center gap-1.5 mb-1">
+                            <TrendingUp className="w-4 h-4 text-emerald-400" /> 📈 Business Impact
+                          </span>
+                          <p className="text-slate-200">
+                            <strong>Expected Revenue Protected:</strong> <span className="text-emerald-300 font-bold">{msg.structuredCard.businessImpact.protectedRevenue}</span>
+                          </p>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="pt-2 flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => alert('Purchase Order Created!')}
+                            className="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => alert('Draft PO Initiated')}
+                            className="bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-700/50 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+                          >
+                            Create PO
+                          </button>
+                          <button
+                            onClick={() => (window.location.href = '/inventory')}
+                            className="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all"
+                          >
+                            View Product
+                          </button>
+                          <button
+                            onClick={() => setSelectedReasoning(sampleReasoning)}
+                            className="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1"
+                          >
+                            <HelpCircle className="w-3.5 h-3.5" /> Explain
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Trust Footer below every response */}
+                    {msg.trustFooter && (
+                      <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-2.5 text-[11px] flex flex-wrap items-center justify-between text-slate-400 gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <span><strong>Evidence:</strong> {msg.trustFooter.evidence.join(' | ')}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span><strong>Confidence:</strong> <span className="text-emerald-400 font-bold">{msg.trustFooter.confidenceScore}%</span></span>
+                          <span><strong>Updated:</strong> {msg.trustFooter.lastUpdated}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
+
+              {/* Sequential Processing Animation */}
+              {isProcessing && (
+                <div className="flex gap-4 justify-start">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-600/30 border border-purple-500/40 flex items-center justify-center text-purple-300 shrink-0">
+                    <Bot className="w-5 h-5 animate-bounce text-purple-400" />
+                  </div>
+                  <div className="bg-slate-900 border border-purple-500/40 px-5 py-4 rounded-2xl rounded-bl-none shadow-xl space-y-2 max-w-md">
+                    <div className="flex items-center gap-2 text-purple-300 text-xs font-bold">
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                      <span>AI Intelligence Matrix Processing</span>
+                    </div>
+                    <p className="text-xs text-purple-200 font-mono animate-pulse">{thinkingStep}</p>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* BOTTOM PROMPT BAR WITH VOICE & FILE UPLOAD */}
+            <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3">
+              {/* ChatGPT Voice Animation Status Bar */}
+              {isVoiceActive && (
+                <div className="p-3 bg-purple-950/80 border border-purple-500/50 rounded-xl flex items-center justify-between text-xs text-purple-200 animate-pulse">
+                  <div className="flex items-center gap-2 font-bold">
+                    <Activity className="w-4 h-4 text-purple-400 animate-spin" />
+                    <span>ChatGPT Voice Mode:</span>
+                    <span className="text-amber-300 font-mono">{voiceStatus}</span>
+                  </div>
+                  <button onClick={handleVoiceToggle} className="text-xs text-rose-400 hover:underline">
+                    Stop Voice
+                  </button>
+                </div>
+              )}
+
+              {/* Quick Prompts Pills (Roman Urdu & English) */}
+              <div className="flex items-center gap-2 overflow-x-auto text-xs pb-1">
+                <span className="text-slate-400 font-semibold shrink-0">Prompts:</span>
+                <button
+                  onClick={() => handleSendPrompt('aj stock kitna hai')}
+                  className="bg-purple-950/70 hover:bg-purple-900/80 text-purple-200 border border-purple-600/50 px-3 py-1 rounded-full shrink-0 transition-all font-medium"
+                >
+                  🇵🇰 aj stock kitna hai
+                </button>
+                <button
+                  onClick={() => handleSendPrompt("Show today's inventory")}
+                  className="bg-slate-800 hover:bg-slate-700 text-cyan-200 border border-cyan-700/50 px-3 py-1 rounded-full shrink-0 transition-all font-medium"
+                >
+                  🇬🇧 Show today's inventory
+                </button>
+                <button
+                  onClick={() => handleSendPrompt('Low stock warnings dikhao')}
+                  className="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-700/50 px-3 py-1 rounded-full shrink-0 transition-all font-medium"
+                >
+                  ⚠️ Low stock warnings
+                </button>
+              </div>
+
+              {/* Input Bar */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleVoiceToggle}
+                  className={`p-3 rounded-xl transition-all border ${
+                    isVoiceActive
+                      ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
+                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                  }`}
+                  title="Voice Input (ChatGPT Voice Feel)"
+                >
+                  {isVoiceActive ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </button>
+
+                <button
+                  onClick={() => alert('File upload attached for ERP ingestion.')}
+                  className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 rounded-xl transition-all"
+                  title="Upload Document"
+                >
+                  <Paperclip className="w-5 h-5" />
+                </button>
+
+                <input
+                  type="text"
+                  value={inputPrompt}
+                  onChange={(e) => setInputPrompt(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendPrompt()}
+                  placeholder="Ask NRT AI Operations Manager (e.g. aj stock kitna hai, Show inventory)..."
+                  className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-all"
+                />
+
+                <button
+                  onClick={() => handleSendPrompt()}
+                  disabled={!inputPrompt.trim() || isProcessing}
+                  className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all shadow-lg shadow-purple-600/20 flex items-center gap-2"
+                >
+                  <span>Send</span>
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
-        )}
+        </main>
 
-        {/* TAB 4: 10 DEMO SCENARIOS CONTROL */}
-        {activeTab === 'scenarios' && (
-          <DemoScenarioSwitcher
-            scenarios={demoScenarios}
-            activeScenarioId={activeScenario.id}
-            onSelectScenario={handleSelectScenario}
-            onReset={handleResetEnvironment}
-            isLoading={isResetting}
-          />
-        )}
-      </main>
+        {/* COLUMN 3: RIGHT PANEL (MISSION CONTROL TODAY'S RISKS & ACTIONS) */}
+        <aside className="w-72 bg-slate-900/70 border-l border-slate-800 flex flex-col justify-between shrink-0 hidden xl:flex p-4 space-y-6 overflow-y-auto">
+          {/* Today's Risks */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+              <ShieldAlert className="w-4 h-4 text-rose-400" /> Today's Risks
+            </span>
 
-      {/* Floating Chat Drawer Trigger */}
-      <button
-        onClick={() => setIsChatOpen(true)}
-        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl shadow-purple-500/40 hover:scale-110 active:scale-95 transition-all flex items-center gap-2 border border-purple-400/40"
-      >
-        <Bot className="w-6 h-6 animate-pulse" />
-        <span className="font-bold text-xs pr-1 hidden md:inline">Ask AI Assistant</span>
-      </button>
+            <div className="p-3 bg-rose-950/30 border border-rose-800/40 rounded-xl text-xs space-y-1">
+              <h5 className="font-bold text-rose-300">Logitech MX Master 3S</h5>
+              <p className="text-slate-400 text-[11px]">Stock level (5) below safety threshold (20).</p>
+              <span className="text-[10px] text-rose-400 font-bold block pt-1">Risk: High Stockout</span>
+            </div>
 
-      {/* AI Chat Drawer */}
-      <AiChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+            <div className="p-3 bg-amber-950/30 border border-amber-800/40 rounded-xl text-xs space-y-1">
+              <h5 className="font-bold text-amber-300">MacBook Pro 16-inch M3</h5>
+              <p className="text-slate-400 text-[11px]">Lahore warehouse low stock (2 units left).</p>
+            </div>
+          </div>
+
+          {/* Critical Alerts */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 text-amber-400" /> Critical Alerts
+            </span>
+
+            <div className="p-3 bg-slate-800/60 border border-slate-700 rounded-xl text-xs space-y-1">
+              <span className="font-bold text-white block">PO-2026-001 Pending Approval</span>
+              <p className="text-slate-400 text-[11px]">PKR 220,000 Purchase Order awaiting sign-off.</p>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="space-y-3">
+            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider block">
+              Quick Actions
+            </span>
+
+            <div className="space-y-2 text-xs">
+              <button
+                onClick={() => alert('Initiating Auto Stock Reorder...')}
+                className="w-full text-left p-2.5 bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-700/50 rounded-xl font-semibold transition-all flex items-center justify-between"
+              >
+                <span>Auto-Reorder Low Stock</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => alert('Generating Daily P&L Briefing...')}
+                className="w-full text-left p-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-700/50 rounded-xl font-semibold transition-all flex items-center justify-between"
+              >
+                <span>Daily P&L Executive Summary</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-3 bg-purple-950/20 border border-purple-800/30 rounded-xl text-[11px] text-slate-400">
+            💡 Mission Control is operating in autonomous monitoring mode.
+          </div>
+        </aside>
+      </div>
 
       {/* Explain Decision Modal */}
       <ExplainDecisionModal

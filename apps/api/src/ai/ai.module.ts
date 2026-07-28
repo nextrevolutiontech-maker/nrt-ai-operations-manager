@@ -103,6 +103,8 @@ import { WorkflowStateService } from './orchestration/workflow-state.service';
 import { WorkflowHistoryService } from './orchestration/workflow-history.service';
 import { WorkflowEngineService } from './orchestration/workflow-engine.service';
 import { GroqAiProvider } from './brain/providers/groq-ai.provider';
+import { XAiGrokProvider } from './brain/providers/xai-grok.provider';
+import { OpenRouterAiProvider } from './brain/providers/openrouter-ai.provider';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -111,17 +113,52 @@ import { PrismaModule } from '../prisma/prisma.module';
   providers: [
     {
       provide: AI_PROVIDER_TOKEN,
-      useFactory: (groq: GroqAiProvider, gemini: GeminiAiProvider, openai: OpenAiProvider) => {
-        if (process.env.GROQ_API_KEY || process.env.AI_PROVIDER === 'groq') {
+      useFactory: (
+        openrouter: OpenRouterAiProvider,
+        grok: XAiGrokProvider,
+        groq: GroqAiProvider,
+        gemini: GeminiAiProvider,
+        openai: OpenAiProvider,
+      ) => {
+        const preferred = (process.env.AI_PROVIDER || '').toLowerCase();
+        if (preferred === 'openrouter' || process.env.OPENROUTER_API_KEY) {
+          return openrouter;
+        }
+        if (preferred === 'gemini') {
+          return gemini;
+        }
+        if (preferred === 'grok') {
+          return grok;
+        }
+        if (preferred === 'groq') {
           return groq;
         }
-        if (process.env.AI_PROVIDER === 'openai' || (!process.env.GEMINI_API_KEY && process.env.OPENAI_API_KEY)) {
+        if (preferred === 'openai') {
           return openai;
         }
-        return gemini;
+
+        if (process.env.OPENROUTER_API_KEY) {
+          return openrouter;
+        }
+        if (process.env.GEMINI_API_KEY) {
+          return gemini;
+        }
+        if (process.env.XAI_GROK_API_KEY || process.env.GROK_API_KEY) {
+          return grok;
+        }
+        if (process.env.GROQ_API_KEY) {
+          return groq;
+        }
+        if (process.env.OPENAI_API_KEY) {
+          return openai;
+        }
+
+        return openrouter;
       },
-      inject: [GroqAiProvider, GeminiAiProvider, OpenAiProvider],
+      inject: [OpenRouterAiProvider, XAiGrokProvider, GroqAiProvider, GeminiAiProvider, OpenAiProvider],
     },
+    OpenRouterAiProvider,
+    XAiGrokProvider,
     GroqAiProvider,
     GeminiAiProvider,
     OpenAiProvider,

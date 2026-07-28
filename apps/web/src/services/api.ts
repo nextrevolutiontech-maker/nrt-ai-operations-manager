@@ -25,6 +25,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // If the failed request was the refresh endpoint itself, logout immediately
+    if (originalRequest?.url?.includes('/auth/refresh')) {
+      useAuthStore.getState().logout();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
@@ -41,7 +51,9 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();
-        window.location.href = '/login';
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

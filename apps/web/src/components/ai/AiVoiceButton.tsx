@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, X, Send, Loader2, Bot, Sparkles, Activity } from 'lucide-react';
+import { Mic, MicOff, X, Send, Loader2, Bot, Sparkles, Activity, Globe, Volume2, VolumeX } from 'lucide-react';
 import { aiService } from '../../services/ai';
 
 interface Message {
@@ -14,26 +14,134 @@ export function AiVoiceButton() {
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [language, setLanguage] = useState<'ur-PK' | 'en-US'>('ur-PK');
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', content: 'Assalam-u-Alaikum! Main aapka NRT AI Digital Employee hoon. Aap mujh se kuch bhi pooch sakte hain.' }
   ]);
   const [inputText, setInputText] = useState('');
   const [sessionId, setSessionId] = useState<string | undefined>();
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const isVoiceModeRef = useRef(false);
+  const languageRef = useRef(language);
+
+  useEffect(() => {
+    isVoiceModeRef.current = isVoiceMode;
+  }, [isVoiceMode]);
+
+  useEffect(() => {
+    languageRef.current = language;
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = language;
+    }
+  }, [language]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isOpen, isVoiceMode]);
 
+  // Clean text before passing to SpeechSynthesis so markdown/emojis/logs aren't read aloud
+  const sanitizeTextForSpeech = (rawText: string): string => {
+    return rawText
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove markdown bold
+      .replace(/#+\s?/g, '') // Remove headings
+      .replace(/\[[^\]]+\]/g, '') // Remove tags
+      .replace(/⚠️|⚡|✅|❌|🔍|💡|📊|📈|📉|🤖|✨/g, '') // Remove emojis & symbols
+      .replace(/https?:\/\/\S+/g, '') // Remove URLs
+      .replace(/\n+/g, '. ') // Convert linebreaks to sentence pauses
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   const speak = (text: string) => {
+    if (!('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+    const cleanedText = sanitizeTextForSpeech(text);
+    if (!cleanedText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanedText);
+    
+    // Detect Urdu script vs Roman Urdu / English
+    const isUrduScript = /[\u0600-\u06FF]/.test(cleanedText);
+    const voices = window.speechSynthesis.getVoices();
+
+    if (isUrduScript) {
+      const urduVoice = voices.find(v => v.lang.includes('ur') || v.lang.includes('hi') || v.name.includes('Urdu') || v.name.includes('Hindi'));
+      if (urduVoice) utterance.voice = urduVoice;
+      utterance.lang = urduVoice?.lang || 'ur-PK';
+    } else {
+      const bestVoice = voices.find(v => v.lang.toLowerCase().startsWith(languageRef.current.split('-')[0]) || v.name.includes('Google') || v.name.includes('Natural')) || voices[0];
+      if (bestVoice) utterance.voice = bestVoice;
+      utterance.lang = languageRef.current;
+    }
+
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => setIsSpeaking(true);
+
+    // Pause recognition while speaking to prevent self-triggering
+    if (recognitionRef.current && isListening) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      if (isVoiceModeRef.current) {
+        startVoiceRecognitionSilently();
+      }
+    };
+
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      if (isVoiceModeRef.current) {
+        startVoiceRecognitionSilently();
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      window.speechSynthesis.speak(utterance);
+    }
+    setIsSpeaking(false);
+  };
+
+  const startVoiceRecognitionSilently = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = languageRef.current;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript && transcript.trim()) {
+          setInputText(transcript);
+          sendMessage(transcript);
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      setIsListening(false);
     }
   };
 
@@ -45,71 +153,58 @@ export function AiVoiceButton() {
     setIsLoading(true);
 
     try {
-      const result = await aiService.chat(text, sessionId);
-      setSessionId(result.sessionId);
-      const aiMsg: Message = { role: 'ai', content: result.response };
+      const result: any = await aiService.chat(text, sessionId);
+      const aiResponse = result?.response || result?.content || (typeof result === 'string' ? result : JSON.stringify(result));
+      if (result?.sessionId) {
+        setSessionId(result.sessionId);
+      }
+      const aiMsg: Message = { role: 'ai', content: aiResponse };
       setMessages(prev => [...prev, aiMsg]);
       
-      if (isVoiceMode) {
-        speak(result.response);
-      }
+      // ALWAYS speak response out loud!
+      speak(aiResponse);
     } catch (err: any) {
-      let errText = 'Sorry, main abhi server se connect nahi kar pa raha. Thoda wait karein.';
+      let errText = err?.response?.data?.message || err?.message || 'Server se connect nahi ho pa raha. Kripya login check karein.';
       if (err?.response?.status === 401 || err?.response?.status === 403) {
-        errText = 'Permission error: Please logout and login again to refresh your session.';
-      } else if (err?.response?.status === 404) {
-        errText = 'AI service not found. Please make sure the backend server is running.';
+        errText = 'Permission error: Please refresh your session or login again.';
       }
       const errMsg: Message = { role: 'ai', content: errText };
       setMessages(prev => [...prev, errMsg]);
+      speak(errText);
     } finally {
       setIsLoading(false);
-      if (isVoiceMode) {
-        // Auto stop voice mode after interaction for demonstration, or keep it running.
-        // We'll keep it running to allow back-and-forth.
-      }
     }
   };
 
   const startVoiceMode = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Your browser does not support Speech Recognition. Please use Google Chrome.');
+      alert('Your browser does not support Speech Recognition. Please use Google Chrome or Edge.');
       return;
     }
 
     setIsVoiceMode(true);
-    setIsOpen(false); // Hide text chat if open
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInputText(transcript);
-      sendMessage(transcript);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    setIsOpen(false);
+    startVoiceRecognitionSilently();
   };
 
   const stopVoiceMode = () => {
-    recognitionRef.current?.stop();
+    stopSpeaking();
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
     setIsListening(false);
     setIsVoiceMode(false);
   };
 
+  const toggleLanguage = () => {
+    setLanguage(prev => (prev === 'ur-PK' ? 'en-US' : 'ur-PK'));
+  };
+
   return (
     <>
-      {/* Floating Buttons Container */}
+      {/* Floating Action Buttons */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
-        {/* Voice Trigger Button (Smart Mode) */}
         {!isVoiceMode && (
           <button
             onClick={startVoiceMode}
@@ -121,11 +216,10 @@ export function AiVoiceButton() {
           </button>
         )}
 
-        {/* Text Chat Trigger Button */}
         {!isOpen && !isVoiceMode && (
           <button
             onClick={() => setIsOpen(true)}
-            className="w-14 h-14 bg-white text-slate-800 rounded-full shadow-lg border border-slate-100 hover:shadow-xl hover:scale-110 transition-all duration-200 flex items-center justify-center group"
+            className="w-14 h-14 bg-white text-slate-800 rounded-full shadow-lg border border-slate-100 hover:shadow-xl hover:scale-110 transition-all duration-200 flex items-center justify-center group relative"
             title="Open AI Chat"
           >
             <Bot className="w-6 h-6 text-blue-600 group-hover:scale-110 transition-transform" />
@@ -134,81 +228,104 @@ export function AiVoiceButton() {
         )}
       </div>
 
-      {/* SMART VOICE OVERLAY (Sidebar Redesign) */}
+      {/* SMART VOICE OVERLAY (Sidebar Design) */}
       {isVoiceMode && (
-        <div className="fixed top-0 right-0 h-full w-full sm:w-[400px] z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-center animate-in slide-in-from-right duration-500 border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+        <div className="fixed top-0 right-0 h-full w-full sm:w-[420px] z-[100] bg-slate-900/95 backdrop-blur-2xl flex flex-col items-center justify-between py-8 border-l border-white/10 shadow-[-20px_0_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-right duration-500">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-             {/* Animated Background Orbs (Scaled down) */}
-             <div className="absolute top-1/4 -left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-[80px] animate-pulse"></div>
-             <div className="absolute bottom-1/4 right-0 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-[80px] animate-pulse" style={{animationDelay: '1s'}}></div>
+            <div className="absolute top-1/4 -left-1/4 w-64 h-64 bg-violet-600/20 rounded-full blur-[80px] animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-0 w-64 h-64 bg-fuchsia-600/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
 
-          <button 
-            onClick={stopVoiceMode}
-            className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors z-20"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Header Bar */}
+          <div className="w-full px-6 flex items-center justify-between z-20">
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-full backdrop-blur-md transition-colors"
+              title="Toggle Language Mode"
+            >
+              <Globe className="w-3.5 h-3.5 text-fuchsia-400" />
+              <span>{language === 'ur-PK' ? 'Urdu / Roman Urdu' : 'English'}</span>
+            </button>
 
-          <div className="relative z-10 flex flex-col items-center w-full px-8">
-            {/* Smart Center Orb */}
+            <button
+              onClick={stopVoiceMode}
+              className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
+              title="Close Voice Assistant"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Center Visualizer & Status */}
+          <div className="relative z-10 flex flex-col items-center w-full px-8 my-auto">
             <div className="relative flex items-center justify-center mb-8">
-              <div className={`absolute inset-0 rounded-full transition-all duration-700 ${isListening ? 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-orange-500 blur-2xl opacity-70 animate-pulse scale-150' : 'bg-blue-500 blur-xl opacity-30 scale-100'}`}></div>
-              <div className="w-24 h-24 bg-gradient-to-br from-slate-900 to-slate-800 rounded-full shadow-2xl border border-white/10 flex items-center justify-center relative z-10 overflow-hidden">
-                {isListening ? (
-                  <div className="flex items-center gap-1 h-8">
-                    <span className="w-1 bg-fuchsia-500 rounded-full animate-[bounce_1s_infinite] h-5"></span>
-                    <span className="w-1 bg-violet-500 rounded-full animate-[bounce_1.2s_infinite_0.1s] h-8"></span>
-                    <span className="w-1 bg-orange-500 rounded-full animate-[bounce_0.9s_infinite_0.2s] h-4"></span>
-                    <span className="w-1 bg-fuchsia-500 rounded-full animate-[bounce_1.1s_infinite_0.3s] h-6"></span>
-                    <span className="w-1 bg-violet-500 rounded-full animate-[bounce_1s_infinite_0.4s] h-5"></span>
+              <div className={`absolute inset-0 rounded-full transition-all duration-700 ${isSpeaking ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 blur-2xl opacity-80 animate-pulse scale-150' : isListening ? 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-orange-500 blur-2xl opacity-70 animate-pulse scale-150' : 'bg-blue-500 blur-xl opacity-30 scale-100'}`}></div>
+              <div className="w-28 h-28 bg-gradient-to-br from-slate-900 to-slate-800 rounded-full shadow-2xl border border-white/10 flex items-center justify-center relative z-10 overflow-hidden">
+                {isSpeaking ? (
+                  <div className="flex items-center gap-1.5 h-10">
+                    <span className="w-1.5 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite] h-8"></span>
+                    <span className="w-1.5 bg-teal-400 rounded-full animate-[bounce_1s_infinite_0.1s] h-10"></span>
+                    <span className="w-1.5 bg-cyan-400 rounded-full animate-[bounce_0.7s_infinite_0.2s] h-6"></span>
+                    <span className="w-1.5 bg-emerald-400 rounded-full animate-[bounce_0.9s_infinite_0.3s] h-9"></span>
+                  </div>
+                ) : isListening ? (
+                  <div className="flex items-center gap-1.5 h-10">
+                    <span className="w-1.5 bg-fuchsia-500 rounded-full animate-[bounce_1s_infinite] h-6"></span>
+                    <span className="w-1.5 bg-violet-500 rounded-full animate-[bounce_1.2s_infinite_0.1s] h-10"></span>
+                    <span className="w-1.5 bg-orange-500 rounded-full animate-[bounce_0.9s_infinite_0.2s] h-5"></span>
+                    <span className="w-1.5 bg-fuchsia-500 rounded-full animate-[bounce_1.1s_infinite_0.3s] h-8"></span>
                   </div>
                 ) : isLoading ? (
-                  <Loader2 className="w-8 h-8 text-fuchsia-400 animate-spin" />
+                  <Loader2 className="w-10 h-10 text-fuchsia-400 animate-spin" />
                 ) : (
-                  <Sparkles className="w-8 h-8 text-white/50" />
+                  <Sparkles className="w-10 h-10 text-white/50" />
                 )}
               </div>
             </div>
 
-            {/* Transcripts */}
-            <div className="w-full text-center space-y-6">
-              {messages.length > 1 && (
-                <div className="animate-in slide-in-from-bottom-4 fade-in duration-500">
-                  <p className="text-lg md:text-xl font-medium text-white/90 leading-relaxed">
+            {/* Transcript Messages */}
+            <div className="w-full text-center space-y-4 max-h-[220px] overflow-y-auto px-2">
+              {messages.length > 0 && (
+                <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
+                  <p className="text-base md:text-lg font-medium text-white/90 leading-relaxed">
                     "{messages[messages.length - 1].content}"
                   </p>
                 </div>
               )}
-              
-              <div className="h-6">
-                <p className="text-fuchsia-300/80 text-xs font-medium tracking-widest uppercase">
-                  {isListening ? 'Listening...' : isLoading ? 'Processing...' : 'Tap Mic to Speak'}
-                </p>
-              </div>
             </div>
 
-            {/* Controls */}
-            <div className="mt-8">
-              <button
-                onClick={isListening ? stopVoiceMode : startVoiceMode}
-                className={`p-5 rounded-full transition-all shadow-2xl ${
-                  isListening
-                    ? 'bg-red-500 hover:bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.4)]'
-                    : 'bg-white hover:bg-slate-100 text-slate-900'
-                }`}
-              >
-                {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-              </button>
+            <div className="mt-4 flex items-center gap-2">
+              <p className="text-fuchsia-300/80 text-xs font-semibold tracking-widest uppercase">
+                {isSpeaking ? '🗣️ AI Speaking...' : isListening ? '🎙️ Listening...' : isLoading ? '⏳ Processing...' : 'Tap Mic to Speak'}
+              </p>
+              {isSpeaking && (
+                <button onClick={stopSpeaking} className="p-1 bg-white/10 hover:bg-white/20 text-xs text-white rounded-md transition-colors" title="Stop Voice">
+                  <VolumeX className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* Voice Controls Bottom */}
+          <div className="z-20 flex items-center gap-4">
+            <button
+              onClick={isListening ? stopVoiceMode : startVoiceRecognitionSilently}
+              className={`p-6 rounded-full transition-all shadow-2xl hover:scale-105 ${
+                isListening
+                  ? 'bg-red-500 hover:bg-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.5)]'
+                  : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white shadow-[0_0_25px_rgba(192,38,211,0.5)]'
+              }`}
+              title={isListening ? 'Stop Listening' : 'Start Mic'}
+            >
+              {isListening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
+            </button>
           </div>
         </div>
       )}
 
-      {/* STANDARD TEXT CHAT PANEL */}
+      {/* STANDARD CHAT PANEL */}
       {isOpen && !isVoiceMode && (
         <div className="fixed bottom-24 right-6 z-50 w-[400px] max-h-[700px] h-[80vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-          {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
@@ -227,7 +344,6 @@ export function AiVoiceButton() {
             </button>
           </div>
 
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/50">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -236,12 +352,45 @@ export function AiVoiceButton() {
                     <Bot className="w-4 h-4 text-slate-700" />
                   </div>
                 )}
-                <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                <div className={`group relative max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                   msg.role === 'user'
                     ? 'bg-slate-900 text-white rounded-br-none shadow-md'
                     : 'bg-white text-slate-800 shadow-sm border border-slate-200 rounded-bl-none'
                 }`}>
-                  {msg.content}
+                  {msg.role === 'ai' ? (
+                    <div>
+                      {msg.content.split('\n').map((line, idx) => {
+                        if (!line.trim()) return null;
+                        const cleanLine = line.replace(/^#+\s?/, '');
+                        const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
+                        return (
+                          <div key={idx} className="leading-relaxed">
+                            {parts.map((part, pIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return (
+                                  <strong key={pIdx} className="font-semibold text-violet-700">
+                                    {part.slice(2, -2)}
+                                  </strong>
+                                );
+                              }
+                              return part;
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
+                  {msg.role === 'ai' && (
+                    <button
+                      onClick={() => speak(msg.content)}
+                      className="ml-2 inline-flex items-center text-slate-400 hover:text-slate-700 transition-colors"
+                      title="Speak Out Loud"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -252,9 +401,9 @@ export function AiVoiceButton() {
                 </div>
                 <div className="bg-white px-5 py-4 rounded-2xl rounded-bl-none shadow-sm border border-slate-200">
                   <div className="flex gap-1.5">
-                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay:'0ms'}}></span>
-                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}}></span>
-                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay:'300ms'}}></span>
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                   </div>
                 </div>
               </div>
@@ -262,12 +411,11 @@ export function AiVoiceButton() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Area */}
           <div className="p-4 bg-white border-t border-slate-200 flex items-center gap-3">
             <button
               onClick={startVoiceMode}
               className="p-3 bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 rounded-xl transition-colors group"
-              title="Switch to Smart Voice"
+              title="Switch to Voice Mode"
             >
               <Activity className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>

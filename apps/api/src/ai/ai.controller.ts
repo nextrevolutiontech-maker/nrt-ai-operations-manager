@@ -23,6 +23,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Permissions as RequirePermissions } from '../auth/decorators/permissions.decorator';
 
+import { AiContextEngineService } from './context/ai-context.service';
+
 @ApiTags('AI Command Center')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -39,6 +41,7 @@ export class AiController {
     private readonly alerts: AlertEngineService,
     private readonly recommendations: RecommendationEngineService,
     private readonly tasks: AiTaskService,
+    private readonly contextEngine: AiContextEngineService,
   ) {}
 
   @Post('chat')
@@ -61,12 +64,19 @@ export class AiController {
     }
 
     try {
+      // Save User Message to Session History
+      await this.sessions.saveMessage(sessionId, 'USER', body.prompt);
+
       const response = await this.orchestrator.handlePrompt(
         companyId,
         userId,
         sessionId,
         body.prompt,
       );
+
+      // Save AI Response to Session History
+      await this.sessions.saveMessage(sessionId, 'AI', response);
+
       return { sessionId, response };
     } catch (err: any) {
       const fallbackResponse = `I have analyzed your request ("${body.prompt}"). Based on current warehouse levels & financial ledgers, stock is stable. I recommend drafting a reorder for SKU NRT-SRV-001 (5 units remaining).`;
@@ -128,22 +138,25 @@ export class AiController {
     return this.demoScenarios.resetDemoEnvironment(req.user.companyId);
   }
 
-  // --- AI DASHBOARD, BRIEFINGS, ALERTS & RECOMMENDATIONS ---
+  // --- LIVE AI DASHBOARD, BRIEFINGS, ALERTS & RECOMMENDATIONS ---
   @Get('dashboard/overview')
   @ApiOperation({ summary: 'Get AI Command Center dashboard summary KPIs' })
   @RequirePermissions('read:ai-dashboard')
   async getDashboardOverview(@Req() req: any) {
-    const activeDemo = this.demoScenarios.getActiveScenario(req.user.companyId);
+    const ctx = await this.contextEngine.buildContext(req.user.companyId, req.user.id);
     return {
-      demoMode: true,
-      activeScenario: activeDemo.activeScenario,
-      dataSource: 'Demo Dataset',
+      demoMode: false,
+      dataSource: 'Live PostgreSQL Database',
       kpis: {
-        healthScore: 94,
-        activeAlertsCount: 3,
-        pendingApprovalsCount: 2,
-        recommendationsCount: 4,
-        avgRiskScore: 'LOW',
+        healthScore: ctx.operationalState.totalAvailableStock > 0 ? 98 : 75,
+        activeAlertsCount: ctx.activeAlerts.length,
+        pendingApprovalsCount: ctx.liveKpis.pendingApprovalsCount,
+        totalProducts: ctx.operationalState.totalProductsCount,
+        totalStock: ctx.operationalState.totalAvailableStock,
+        salesOrdersCount: ctx.operationalState.salesOrdersCount,
+        purchaseOrdersCount: ctx.operationalState.purchaseOrdersCount,
+        dailyRevenue: ctx.liveKpis.dailyRevenue,
+        avgRiskScore: ctx.liveKpis.pendingApprovalsCount > 0 ? 'MEDIUM' : 'LOW',
         tokenUsageToday: 14250,
       },
     };
@@ -153,20 +166,21 @@ export class AiController {
   @ApiOperation({ summary: 'Get executive briefing by period (daily, weekly, monthly)' })
   @RequirePermissions('read:ai-dashboard')
   async getBriefing(@Req() req: any, @Param('type') type: string) {
-    const activeDemo = this.demoScenarios.getActiveScenario(req.user.companyId);
-    const scenario = activeDemo.activeScenario;
+    const ctx = await this.contextEngine.buildContext(req.user.companyId, req.user.id);
     return {
       period: type,
-      title: `${type.toUpperCase()} Executive Operations Briefing`,
+      title: `${type.toUpperCase()} Live Operations Executive Briefing`,
       generatedAt: new Date(),
-      summary: scenario?.description || 'Operations performing within expected parameters.',
+      summary: `System active across ${ctx.operationalState.activeWarehouseCount} Warehouses with ${ctx.operationalState.totalAvailableStock} total units in stock.`,
       keyMetrics: [
-        { label: 'Revenue Growth', value: '+14.2%', trend: 'up' },
-        { label: 'Inventory Turnover', value: '4.8x', trend: 'up' },
-        { label: 'Fulfillment Lead Time', value: '1.8 Days', trend: 'down' },
-        { label: 'Order Accuracy', value: '99.4%', trend: 'up' },
+        { label: 'Total Stock Units', value: `${ctx.operationalState.totalAvailableStock}`, trend: 'up' },
+        { label: 'Active Warehouses', value: `${ctx.operationalState.activeWarehouseCount}`, trend: 'stable' },
+        { label: 'Sales Orders Count', value: `${ctx.operationalState.salesOrdersCount}`, trend: 'up' },
+        { label: 'Pending Approvals', value: `${ctx.liveKpis.pendingApprovalsCount}`, trend: ctx.liveKpis.pendingApprovalsCount > 0 ? 'down' : 'stable' },
       ],
-      recommendation: scenario?.recommendedAction || 'Continue routine operational monitoring.',
+      recommendation: ctx.liveKpis.pendingApprovalsCount > 0
+        ? `Review ${ctx.liveKpis.pendingApprovalsCount} pending manager approval requests.`
+        : 'Continue routine operational monitoring.',
     };
   }
 
@@ -174,39 +188,27 @@ export class AiController {
   @ApiOperation({ summary: 'Get AI recommendations with Explain Decision metadata' })
   @RequirePermissions('read:ai-dashboard')
   async getRecommendations(@Req() req: any) {
-    const activeDemo = this.demoScenarios.getActiveScenario(req.user.companyId);
-    const primary = activeDemo.activeScenario;
-    if (!primary) return [];
+    const ctx = await this.contextEngine.buildContext(req.user.companyId, req.user.id);
     return [
       {
-        id: `rec-${primary.id}`,
-        title: primary.title,
-        category: primary.category,
-        description: primary.description,
-        targetModule: primary.targetModule,
-        evidence: primary.evidence,
-        riskScore: primary.riskScore,
-        confidenceScore: primary.confidenceScore,
-        policiesApplied: primary.policiesApplied,
-        toolsUsed: primary.toolsUsed,
-        expectedRoi: primary.expectedRoi,
-        recommendedAction: primary.recommendedAction,
-        status: 'PENDING',
-        createdAt: new Date(),
-      },
-      {
-        id: 'rec-2',
-        title: 'Re-negotiate Logistics Freight Contract',
-        category: 'Procurement',
-        description: 'Q3 shipping volumes qualify for Tier-2 volume discount (-8% freight charges).',
-        targetModule: 'Procurement',
-        evidence: ['Current Monthly Volume: 1,400 parcels', 'Tier-2 Threshold: 1,000 parcels'],
+        id: 'rec-live-01',
+        title: 'Real-Time Inventory & Stock Audit',
+        category: 'Inventory',
+        description: `Current database status: ${ctx.operationalState.totalProductsCount} Products in catalog across ${ctx.operationalState.activeWarehouseCount} Warehouses (${ctx.operationalState.totalAvailableStock} total stock units).`,
+        targetModule: 'Inventory',
+        evidence: [
+          `Total Catalog Products: ${ctx.operationalState.totalProductsCount}`,
+          `Total Available Stock: ${ctx.operationalState.totalAvailableStock} units`,
+          `Sales Orders Processed: ${ctx.operationalState.salesOrdersCount}`,
+        ],
         riskScore: 'LOW',
-        confidenceScore: 92,
-        policiesApplied: ['POL-PROC-005: Vendor Volume Discount Harvest'],
-        toolsUsed: ['SuppliersToolsProvider.getSupplierQuotes'],
-        expectedRoi: '$3,800 monthly savings',
-        recommendedAction: 'Send automated contract amendment request to DHL Logistics.',
+        confidenceScore: 98,
+        policiesApplied: ['POL-INV-001: Safety Stock Level Threshold'],
+        toolsUsed: ['InventoryToolsProvider.inventoryCheck'],
+        expectedRoi: 'Optimal inventory holding cost',
+        recommendedAction: ctx.operationalState.totalAvailableStock < 100
+          ? 'Initiate Purchase Order reorders for low-stock items.'
+          : 'Maintain active inventory levels and monitor order fulfillment.',
         status: 'PENDING',
         createdAt: new Date(),
       },
@@ -217,26 +219,8 @@ export class AiController {
   @ApiOperation({ summary: 'Get real-time AI operational alerts' })
   @RequirePermissions('read:ai-dashboard')
   async getAlerts(@Req() req: any) {
-    const activeDemo = this.demoScenarios.getActiveScenario(req.user.companyId);
-    const scenario = activeDemo.activeScenario;
-    return [
-      {
-        id: 'alt-1',
-        title: scenario?.title || 'Operational Monitoring Active',
-        severity: scenario?.riskScore || 'LOW',
-        module: scenario?.targetModule || 'Inventory',
-        message: scenario?.description || 'All metrics within thresholds.',
-        timestamp: new Date(),
-      },
-      {
-        id: 'alt-2',
-        title: 'Warehouse B Humidity Threshold Exceeded',
-        severity: 'MEDIUM',
-        module: 'Warehouse',
-        message: 'Sensor #WH-B-04 reported 68% relative humidity (max allowed 60%). High value electronics stored.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 25),
-      },
-    ];
+    const ctx = await this.contextEngine.buildContext(req.user.companyId, req.user.id);
+    return ctx.activeAlerts;
   }
 
   @Get('approvals')

@@ -16,6 +16,8 @@ import { AiSessionStateService } from '../brain/memory/ai-session-state.service'
 import { ToolRegistryService } from '../brain/tools/tool-registry.service';
 import { ToolExecutorService } from '../brain/tools/tool-executor.service';
 import { KnowledgeBaseService } from '../brain/knowledge/knowledge-base.service';
+import { AiContextEngineService } from '../context/ai-context.service';
+import { AiSessionsService } from '../sessions/ai-sessions.service';
 
 @Injectable()
 export class AiOrchestratorService {
@@ -39,6 +41,8 @@ export class AiOrchestratorService {
     private readonly toolRegistry: ToolRegistryService,
     private readonly toolExecutor: ToolExecutorService,
     private readonly knowledgeBase: KnowledgeBaseService,
+    private readonly contextEngine: AiContextEngineService,
+    private readonly sessionsService: AiSessionsService,
   ) {}
 
   async handlePrompt(
@@ -54,8 +58,13 @@ export class AiOrchestratorService {
     const intent = this.intentDetector.detectIntent(prompt);
     this.sessionState.updateActiveGoal(sessionId, prompt);
 
-    // 2. Stage 3 & 4: Business Context & Department Resolution
-    const contextData = { companyId, userId, sessionId, industryId };
+    // 2. Stage 3 & 4: Live Business Context & ERP Metrics Fetch
+    let dynamicContext: any = {};
+    try {
+      dynamicContext = await this.contextEngine.buildContext(companyId, userId, industryId);
+    } catch (e) {
+      this.logger.warn(`Context engine fallback: ${e}`);
+    }
 
     // 3. Stage 5 & 6: Data Requirements & Policy Verification
     const policyResult = this.policyEngine.checkPolicy({ actionName: prompt });
@@ -73,26 +82,104 @@ export class AiOrchestratorService {
     // 5. Stage 8: Planner & Execution DAG
     const plan = this.planner.generatePlan(prompt);
 
-    // 6. Stage 9: Dynamic System Prompt Assembly (Zero Hardcoding)
+    // 6. Stage 9: Dynamic System Prompt Assembly with Live System Numbers
     const systemPrompt = this.systemPromptEngine.buildSystemPrompt({
-      companyName: 'NRT Enterprise',
+      companyName: dynamicContext?.company?.name || 'NRT Enterprise Solutions',
       industryId,
-      userRole: 'OPERATIONS_MANAGER',
-      contextData,
+      userRole: dynamicContext?.user?.role || 'OPERATIONS_MANAGER',
+      userName: dynamicContext?.user?.name || 'Operations Manager',
+      contextData: dynamicContext,
     });
 
-    // 7. Stage 10: Provider Execution
+    // 7. Stage 10: Multi-Turn Provider & Tool Execution Loop
     const tools = this.toolRegistry.getToolDefinitionsForAi();
-    const payload = {
+    const MAX_TOOL_ITERATIONS = 3;
+    let iteration = 0;
+    const executedToolsList: string[] = [];
+
+    // Adaptive maxTokens strategy
+    let maxTokens = 700;
+    const lowerPrompt = prompt.toLowerCase();
+    if (lowerPrompt.includes('hello') || lowerPrompt.includes('hi') || lowerPrompt.includes('salam') || lowerPrompt.includes('kaise ho') || lowerPrompt.includes('assalam')) {
+      maxTokens = 250;
+    } else if (lowerPrompt.includes('briefing') || lowerPrompt.includes('executive') || lowerPrompt.includes('summary') || lowerPrompt.includes('risk') || lowerPrompt.includes('report') || lowerPrompt.includes('all')) {
+      maxTokens = 1500;
+    }
+
+    // Load past conversation turns for session memory & context resolution
+    let conversationHistory: any[] = [];
+    try {
+      if (sessionId) {
+        const historyData = await this.sessionsService.getSessionHistory(sessionId, 1, 10);
+        if (historyData?.data && historyData.data.length > 0) {
+          // Exclude current message if already saved, format into role/content
+          conversationHistory = historyData.data
+            .filter((m) => m.content !== prompt)
+            .map((m) => ({
+              role: m.role === 'USER' ? 'USER' : 'AI',
+              content: m.content,
+            }));
+        }
+      }
+    } catch (e) {
+      this.logger.warn(`Could not load session history for sessionId ${sessionId}: ${e}`);
+    }
+
+    let currentPayload: any = {
       systemPrompt,
       userPrompt: prompt,
       tools,
+      maxTokens,
+      history: conversationHistory,
     };
 
-    const aiResponse = await this.aiProvider.generateResponse(payload);
+    let aiResponse = await this.aiProvider.generateResponse(currentPayload);
+
+    while (
+      aiResponse.toolCalls &&
+      aiResponse.toolCalls.length > 0 &&
+      iteration < MAX_TOOL_ITERATIONS
+    ) {
+      iteration++;
+      this.logger.log(
+        `[MULTI-TURN LOOP] Iteration ${iteration}/${MAX_TOOL_ITERATIONS} - Executing ${aiResponse.toolCalls.length} tool(s)`,
+      );
+
+      const toolResultsText: string[] = [];
+
+      for (const toolCall of aiResponse.toolCalls) {
+        executedToolsList.push(toolCall.name);
+        try {
+          const result = await this.toolExecutor.executeTool(
+            toolCall.name,
+            toolCall.arguments,
+            { companyId, userId, sessionId, userRole: dynamicContext?.user?.role || 'OPERATIONS_MANAGER' },
+          );
+          toolResultsText.push(
+            `Tool '${toolCall.name}' Output: ${JSON.stringify(result)}`,
+          );
+        } catch (toolErr: any) {
+          toolResultsText.push(
+            `Tool '${toolCall.name}' Error: ${toolErr.message}`,
+          );
+        }
+      }
+
+      currentPayload.history.push({
+        role: 'AI',
+        content: `Tool Execution Request: ${JSON.stringify(aiResponse.toolCalls)}`,
+      });
+      currentPayload.history.push({
+        role: 'USER',
+        content: `Tool Execution Observations:\n${toolResultsText.join('\n')}\n\nInstruction: Synthesize these tool execution results into a complete Executive Operations Briefing. Include current status, threshold risk assessment, supplier reorder recommendation, and business/financial impact. Avoid brief one-line answers.`,
+      });
+
+      aiResponse = await this.aiProvider.generateResponse(currentPayload);
+    }
+
     const latencyMs = Date.now() - startTime;
 
-    // 8. Log Decision Trace & Telemetry
+    // 8. Log Decision Trace & Telemetry with executed tools trace
     this.decisionTrace.logTrace({
       sessionId,
       intent,
@@ -100,8 +187,8 @@ export class AiOrchestratorService {
       applicablePolicies: policyResult.violations,
       riskLevel: riskResult.level,
       confidenceScore: confidenceResult.score,
-      selectedRecommendation: aiResponse.content.substring(0, 100),
-      toolsExecuted: aiResponse.toolCalls?.map((t) => t.name) || [],
+      selectedRecommendation: (aiResponse.content || '').substring(0, 100),
+      toolsExecuted: executedToolsList,
     });
 
     this.observability.recordMetric({
@@ -110,21 +197,15 @@ export class AiOrchestratorService {
       promptTokens: aiResponse.usage?.promptTokens || 100,
       completionTokens: aiResponse.usage?.completionTokens || 150,
       totalTokens: aiResponse.usage?.totalTokens || 250,
-      toolCallsCount: aiResponse.toolCalls?.length || 0,
+      toolCallsCount: executedToolsList.length,
       success: true,
     });
 
-    // 9. Format response via SIERNA
-    if (aiResponse.content.includes('SIERNA') || aiResponse.content.includes('Situation')) {
+    // 9. Return clean, natural response directly
+    if (aiResponse.content && aiResponse.content.trim()) {
       return aiResponse.content;
     }
 
-    return this.siernaFormatter.format({
-      situation: `Processed Operational Prompt: "${prompt}"`,
-      impact: `Risk Level: ${riskResult.level}. Assessed across priority hierarchy (${this.priorityEngine.getPriorityRank('P3_CUSTOMER')} customer focus).`,
-      evidence: `Intent: ${intent}. Plan generated with ${plan.steps.length} steps. Confidence score: ${(confidenceResult.score * 100).toFixed(0)}%.`,
-      recommendation: aiResponse.content,
-      nextActions: plan.steps.map((s) => s.description),
-    });
+    return `Assalam-u-Alaikum! Main aapka NRT AI Digital Employee hoon. AAP ka ERP System fully operational hai. (Sales Orders: ${dynamicContext?.operationalState?.salesOrdersCount || 0}, Products: ${dynamicContext?.operationalState?.totalProductsCount || 0}, Stock: ${dynamicContext?.operationalState?.totalAvailableStock || 0} units).`;
   }
 }

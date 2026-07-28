@@ -14,7 +14,7 @@ export class InventoriesService {
   ): Promise<PaginatedResultDto<any>> {
     const {
       page = 1,
-      limit = 10,
+      limit = 100,
       warehouseId,
       productId,
       lowStock,
