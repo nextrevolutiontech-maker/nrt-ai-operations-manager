@@ -4,7 +4,7 @@ import { PrismaClient } from '@nrt-ai-workforce/database';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const connectionString = process.env.DATABASE_URL as string;
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 
@@ -18,10 +18,18 @@ export class PrismaService
   }
 
   async onModuleInit() {
-    await this.$connect();
+    try {
+      await this.$connect();
+    } catch (e) {
+      console.warn(`PrismaService connection warning: ${e}`);
+    }
   }
 
   async onModuleDestroy() {
-    await this.$disconnect();
+    try {
+      await this.$disconnect();
+    } catch (e) {
+      // Ignore disconnect error on serverless tear-down
+    }
   }
 }
