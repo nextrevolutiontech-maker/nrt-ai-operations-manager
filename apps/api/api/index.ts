@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
@@ -10,7 +11,7 @@ let isBootstrapped = false;
 
 async function bootstrap() {
   if (!isBootstrapped) {
-    const app = await NestFactory.create(AppModule, server);
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
     app.enableCors({ origin: true, credentials: true });
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     app.setGlobalPrefix('api');
