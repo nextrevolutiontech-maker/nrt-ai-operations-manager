@@ -1,12 +1,6 @@
 import 'dotenv/config';
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@nrt-ai-workforce/database';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
-
-const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
 
 @Injectable()
 export class PrismaService
@@ -14,7 +8,16 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    super({ adapter });
+    super({
+      datasources: process.env.DATABASE_URL
+        ? {
+            db: {
+              url: process.env.DATABASE_URL,
+            },
+          }
+        : undefined,
+      log: ['error', 'warn'],
+    });
   }
 
   async onModuleInit() {
