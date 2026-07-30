@@ -5550,6 +5550,12 @@ export namespace Prisma {
     deletedAt: Date | null
     createdBy: string | null
     updatedBy: string | null
+    taxId: string | null
+    email: string | null
+    phone: string | null
+    address: string | null
+    currency: string | null
+    timezone: string | null
   }
 
   export type CompanyMaxAggregateOutputType = {
@@ -5561,6 +5567,12 @@ export namespace Prisma {
     deletedAt: Date | null
     createdBy: string | null
     updatedBy: string | null
+    taxId: string | null
+    email: string | null
+    phone: string | null
+    address: string | null
+    currency: string | null
+    timezone: string | null
   }
 
   export type CompanyCountAggregateOutputType = {
@@ -5572,6 +5584,12 @@ export namespace Prisma {
     deletedAt: number
     createdBy: number
     updatedBy: number
+    taxId: number
+    email: number
+    phone: number
+    address: number
+    currency: number
+    timezone: number
     _all: number
   }
 
@@ -5585,6 +5603,12 @@ export namespace Prisma {
     deletedAt?: true
     createdBy?: true
     updatedBy?: true
+    taxId?: true
+    email?: true
+    phone?: true
+    address?: true
+    currency?: true
+    timezone?: true
   }
 
   export type CompanyMaxAggregateInputType = {
@@ -5596,6 +5620,12 @@ export namespace Prisma {
     deletedAt?: true
     createdBy?: true
     updatedBy?: true
+    taxId?: true
+    email?: true
+    phone?: true
+    address?: true
+    currency?: true
+    timezone?: true
   }
 
   export type CompanyCountAggregateInputType = {
@@ -5607,6 +5637,12 @@ export namespace Prisma {
     deletedAt?: true
     createdBy?: true
     updatedBy?: true
+    taxId?: true
+    email?: true
+    phone?: true
+    address?: true
+    currency?: true
+    timezone?: true
     _all?: true
   }
 
@@ -5691,6 +5727,12 @@ export namespace Prisma {
     deletedAt: Date | null
     createdBy: string | null
     updatedBy: string | null
+    taxId: string | null
+    email: string | null
+    phone: string | null
+    address: string | null
+    currency: string
+    timezone: string
     _count: CompanyCountAggregateOutputType | null
     _min: CompanyMinAggregateOutputType | null
     _max: CompanyMaxAggregateOutputType | null
@@ -5719,6 +5761,12 @@ export namespace Prisma {
     deletedAt?: boolean
     createdBy?: boolean
     updatedBy?: boolean
+    taxId?: boolean
+    email?: boolean
+    phone?: boolean
+    address?: boolean
+    currency?: boolean
+    timezone?: boolean
     users?: boolean | Company$usersArgs<ExtArgs>
     roles?: boolean | Company$rolesArgs<ExtArgs>
     permissions?: boolean | Company$permissionsArgs<ExtArgs>
@@ -5756,6 +5804,12 @@ export namespace Prisma {
     deletedAt?: boolean
     createdBy?: boolean
     updatedBy?: boolean
+    taxId?: boolean
+    email?: boolean
+    phone?: boolean
+    address?: boolean
+    currency?: boolean
+    timezone?: boolean
   }, ExtArgs["result"]["company"]>
 
   export type CompanySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5767,6 +5821,12 @@ export namespace Prisma {
     deletedAt?: boolean
     createdBy?: boolean
     updatedBy?: boolean
+    taxId?: boolean
+    email?: boolean
+    phone?: boolean
+    address?: boolean
+    currency?: boolean
+    timezone?: boolean
   }, ExtArgs["result"]["company"]>
 
   export type CompanySelectScalar = {
@@ -5778,9 +5838,15 @@ export namespace Prisma {
     deletedAt?: boolean
     createdBy?: boolean
     updatedBy?: boolean
+    taxId?: boolean
+    email?: boolean
+    phone?: boolean
+    address?: boolean
+    currency?: boolean
+    timezone?: boolean
   }
 
-  export type CompanyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "createdAt" | "updatedAt" | "deletedAt" | "createdBy" | "updatedBy", ExtArgs["result"]["company"]>
+  export type CompanyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "slug" | "createdAt" | "updatedAt" | "deletedAt" | "createdBy" | "updatedBy" | "taxId" | "email" | "phone" | "address" | "currency" | "timezone", ExtArgs["result"]["company"]>
   export type CompanyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | Company$usersArgs<ExtArgs>
     roles?: boolean | Company$rolesArgs<ExtArgs>
@@ -5850,6 +5916,12 @@ export namespace Prisma {
       deletedAt: Date | null
       createdBy: string | null
       updatedBy: string | null
+      taxId: string | null
+      email: string | null
+      phone: string | null
+      address: string | null
+      currency: string
+      timezone: string
     }, ExtArgs["result"]["company"]>
     composites: {}
   }
@@ -6306,6 +6378,12 @@ export namespace Prisma {
     readonly deletedAt: FieldRef<"Company", 'DateTime'>
     readonly createdBy: FieldRef<"Company", 'String'>
     readonly updatedBy: FieldRef<"Company", 'String'>
+    readonly taxId: FieldRef<"Company", 'String'>
+    readonly email: FieldRef<"Company", 'String'>
+    readonly phone: FieldRef<"Company", 'String'>
+    readonly address: FieldRef<"Company", 'String'>
+    readonly currency: FieldRef<"Company", 'String'>
+    readonly timezone: FieldRef<"Company", 'String'>
   }
     
 
@@ -51394,7 +51472,13 @@ export namespace Prisma {
     updatedAt: 'updatedAt',
     deletedAt: 'deletedAt',
     createdBy: 'createdBy',
-    updatedBy: 'updatedBy'
+    updatedBy: 'updatedBy',
+    taxId: 'taxId',
+    email: 'email',
+    phone: 'phone',
+    address: 'address',
+    currency: 'currency',
+    timezone: 'timezone'
   };
 
   export type CompanyScalarFieldEnum = (typeof CompanyScalarFieldEnum)[keyof typeof CompanyScalarFieldEnum]
@@ -52500,6 +52584,12 @@ export namespace Prisma {
     deletedAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdBy?: UuidNullableFilter<"Company"> | string | null
     updatedBy?: UuidNullableFilter<"Company"> | string | null
+    taxId?: StringNullableFilter<"Company"> | string | null
+    email?: StringNullableFilter<"Company"> | string | null
+    phone?: StringNullableFilter<"Company"> | string | null
+    address?: StringNullableFilter<"Company"> | string | null
+    currency?: StringFilter<"Company"> | string
+    timezone?: StringFilter<"Company"> | string
     users?: UserListRelationFilter
     roles?: RoleListRelationFilter
     permissions?: PermissionListRelationFilter
@@ -52536,6 +52626,12 @@ export namespace Prisma {
     deletedAt?: SortOrderInput | SortOrder
     createdBy?: SortOrderInput | SortOrder
     updatedBy?: SortOrderInput | SortOrder
+    taxId?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    currency?: SortOrder
+    timezone?: SortOrder
     users?: UserOrderByRelationAggregateInput
     roles?: RoleOrderByRelationAggregateInput
     permissions?: PermissionOrderByRelationAggregateInput
@@ -52575,6 +52671,12 @@ export namespace Prisma {
     deletedAt?: DateTimeNullableFilter<"Company"> | Date | string | null
     createdBy?: UuidNullableFilter<"Company"> | string | null
     updatedBy?: UuidNullableFilter<"Company"> | string | null
+    taxId?: StringNullableFilter<"Company"> | string | null
+    email?: StringNullableFilter<"Company"> | string | null
+    phone?: StringNullableFilter<"Company"> | string | null
+    address?: StringNullableFilter<"Company"> | string | null
+    currency?: StringFilter<"Company"> | string
+    timezone?: StringFilter<"Company"> | string
     users?: UserListRelationFilter
     roles?: RoleListRelationFilter
     permissions?: PermissionListRelationFilter
@@ -52611,6 +52713,12 @@ export namespace Prisma {
     deletedAt?: SortOrderInput | SortOrder
     createdBy?: SortOrderInput | SortOrder
     updatedBy?: SortOrderInput | SortOrder
+    taxId?: SortOrderInput | SortOrder
+    email?: SortOrderInput | SortOrder
+    phone?: SortOrderInput | SortOrder
+    address?: SortOrderInput | SortOrder
+    currency?: SortOrder
+    timezone?: SortOrder
     _count?: CompanyCountOrderByAggregateInput
     _max?: CompanyMaxOrderByAggregateInput
     _min?: CompanyMinOrderByAggregateInput
@@ -52628,6 +52736,12 @@ export namespace Prisma {
     deletedAt?: DateTimeNullableWithAggregatesFilter<"Company"> | Date | string | null
     createdBy?: UuidNullableWithAggregatesFilter<"Company"> | string | null
     updatedBy?: UuidNullableWithAggregatesFilter<"Company"> | string | null
+    taxId?: StringNullableWithAggregatesFilter<"Company"> | string | null
+    email?: StringNullableWithAggregatesFilter<"Company"> | string | null
+    phone?: StringNullableWithAggregatesFilter<"Company"> | string | null
+    address?: StringNullableWithAggregatesFilter<"Company"> | string | null
+    currency?: StringWithAggregatesFilter<"Company"> | string
+    timezone?: StringWithAggregatesFilter<"Company"> | string
   }
 
   export type UserWhereInput = {
@@ -56014,6 +56128,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -56050,6 +56170,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -56086,6 +56212,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -56122,6 +56254,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -56158,6 +56296,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
   }
 
   export type CompanyUpdateManyMutationInput = {
@@ -56169,6 +56313,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
   }
 
   export type CompanyUncheckedUpdateManyInput = {
@@ -56180,6 +56330,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
   }
 
   export type UserCreateInput = {
@@ -59974,6 +60130,21 @@ export namespace Prisma {
     not?: NestedUuidNullableFilter<$PrismaModel> | string | null
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type UserListRelationFilter = {
     every?: UserWhereInput
     some?: UserWhereInput
@@ -60238,6 +60409,12 @@ export namespace Prisma {
     deletedAt?: SortOrder
     createdBy?: SortOrder
     updatedBy?: SortOrder
+    taxId?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    address?: SortOrder
+    currency?: SortOrder
+    timezone?: SortOrder
   }
 
   export type CompanyMaxOrderByAggregateInput = {
@@ -60249,6 +60426,12 @@ export namespace Prisma {
     deletedAt?: SortOrder
     createdBy?: SortOrder
     updatedBy?: SortOrder
+    taxId?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    address?: SortOrder
+    currency?: SortOrder
+    timezone?: SortOrder
   }
 
   export type CompanyMinOrderByAggregateInput = {
@@ -60260,6 +60443,12 @@ export namespace Prisma {
     deletedAt?: SortOrder
     createdBy?: SortOrder
     updatedBy?: SortOrder
+    taxId?: SortOrder
+    email?: SortOrder
+    phone?: SortOrder
+    address?: SortOrder
+    currency?: SortOrder
+    timezone?: SortOrder
   }
 
   export type UuidWithAggregatesFilter<$PrismaModel = never> = {
@@ -60333,6 +60522,24 @@ export namespace Prisma {
     gte?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
@@ -60436,21 +60643,6 @@ export namespace Prisma {
     _max?: NestedBoolFilter<$PrismaModel>
   }
 
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
   export type RolePermissionListRelationFilter = {
     every?: RolePermissionWhereInput
     some?: RolePermissionWhereInput
@@ -60507,24 +60699,6 @@ export namespace Prisma {
     updatedAt?: SortOrder
     createdBy?: SortOrder
     updatedBy?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type CompanyNullableScalarRelationFilter = {
@@ -66516,6 +66690,20 @@ export namespace Prisma {
     not?: NestedUuidNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type NestedUuidWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -66611,33 +66799,6 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedStringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type NestedBoolFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolFilter<$PrismaModel> | boolean
-  }
-
-  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
-    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedBoolFilter<$PrismaModel>
-    _max?: NestedBoolFilter<$PrismaModel>
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -66653,6 +66814,19 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDecimalFilter<$PrismaModel = never> = {
@@ -69083,6 +69257,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
     categories?: CategoryCreateNestedManyWithoutCompanyInput
@@ -69118,6 +69298,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
     categories?: CategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -69287,6 +69473,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUpdateManyWithoutCompanyNestedInput
@@ -69322,6 +69514,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -69462,6 +69660,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
     categories?: CategoryCreateNestedManyWithoutCompanyInput
@@ -69497,6 +69701,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
     categories?: CategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -69636,6 +69846,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUpdateManyWithoutCompanyNestedInput
@@ -69671,6 +69887,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -69784,6 +70006,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     categories?: CategoryCreateNestedManyWithoutCompanyInput
@@ -69819,6 +70047,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     categories?: CategoryUncheckedCreateNestedManyWithoutCompanyInput
@@ -69894,6 +70128,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUpdateManyWithoutCompanyNestedInput
@@ -69929,6 +70169,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     categories?: CategoryUncheckedUpdateManyWithoutCompanyNestedInput
@@ -70352,6 +70598,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -70387,6 +70639,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -70577,6 +70835,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -70612,6 +70876,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -70718,6 +70988,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -70753,6 +71029,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -70872,6 +71154,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -70907,6 +71195,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -70958,6 +71252,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -70993,6 +71293,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -71112,6 +71418,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -71147,6 +71459,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -71198,6 +71516,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -71233,6 +71557,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -71531,6 +71861,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -71566,6 +71902,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -71808,6 +72150,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -71843,6 +72191,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -72068,6 +72422,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -72103,6 +72463,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -72202,6 +72568,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -72237,6 +72609,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -72388,6 +72766,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -72423,6 +72807,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -72570,6 +72960,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -72605,6 +73001,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -72756,6 +73158,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -72791,6 +73199,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -72938,6 +73352,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -72973,6 +73393,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -73068,6 +73494,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -73103,6 +73535,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -73208,6 +73646,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -73243,6 +73687,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -73321,6 +73771,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -73356,6 +73812,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -73424,6 +73886,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -73459,6 +73927,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -73634,6 +74108,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -73669,6 +74149,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -74032,6 +74518,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -74067,6 +74559,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -74118,6 +74616,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -74153,6 +74657,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -74188,6 +74698,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -74223,6 +74739,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -74274,6 +74796,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -74309,6 +74837,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -74344,6 +74878,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -74379,6 +74919,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -74430,6 +74976,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -74465,6 +75017,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -74500,6 +75058,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -74535,6 +75099,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -74672,6 +75242,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -74707,6 +75283,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -74922,6 +75504,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -74957,6 +75545,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -75075,6 +75669,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -75110,6 +75710,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -75306,6 +75912,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -75341,6 +75953,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -75428,6 +76046,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -75463,6 +76087,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -75607,6 +76237,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -75642,6 +76278,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -75739,6 +76381,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -75774,6 +76422,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -75825,6 +76479,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -75860,6 +76520,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -76031,6 +76697,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -76066,6 +76738,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -76437,6 +77115,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -76472,6 +77156,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -76632,6 +77322,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -76667,6 +77363,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -76791,6 +77493,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -76826,6 +77534,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -76903,6 +77617,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -76938,6 +77658,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -77149,6 +77875,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -77184,6 +77916,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -77304,6 +78042,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -77339,6 +78083,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput
@@ -77691,6 +78441,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserCreateNestedManyWithoutCompanyInput
     roles?: RoleCreateNestedManyWithoutCompanyInput
     permissions?: PermissionCreateNestedManyWithoutCompanyInput
@@ -77726,6 +78482,12 @@ export namespace Prisma {
     deletedAt?: Date | string | null
     createdBy?: string | null
     updatedBy?: string | null
+    taxId?: string | null
+    email?: string | null
+    phone?: string | null
+    address?: string | null
+    currency?: string
+    timezone?: string
     users?: UserUncheckedCreateNestedManyWithoutCompanyInput
     roles?: RoleUncheckedCreateNestedManyWithoutCompanyInput
     permissions?: PermissionUncheckedCreateNestedManyWithoutCompanyInput
@@ -77777,6 +78539,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutCompanyNestedInput
     roles?: RoleUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUpdateManyWithoutCompanyNestedInput
@@ -77812,6 +78580,12 @@ export namespace Prisma {
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     updatedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    taxId?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    address?: NullableStringFieldUpdateOperationsInput | string | null
+    currency?: StringFieldUpdateOperationsInput | string
+    timezone?: StringFieldUpdateOperationsInput | string
     users?: UserUncheckedUpdateManyWithoutCompanyNestedInput
     roles?: RoleUncheckedUpdateManyWithoutCompanyNestedInput
     permissions?: PermissionUncheckedUpdateManyWithoutCompanyNestedInput

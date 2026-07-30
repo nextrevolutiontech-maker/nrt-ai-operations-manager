@@ -128,7 +128,13 @@ exports.Prisma.CompanyScalarFieldEnum = {
   updatedAt: 'updatedAt',
   deletedAt: 'deletedAt',
   createdBy: 'createdBy',
-  updatedBy: 'updatedBy'
+  updatedBy: 'updatedBy',
+  taxId: 'taxId',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
+  currency: 'currency',
+  timezone: 'timezone'
 };
 
 exports.Prisma.UserScalarFieldEnum = {
