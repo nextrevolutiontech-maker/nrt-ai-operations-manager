@@ -45,6 +45,7 @@ import {
   BarChart3,
   FileCheck,
   AlertCircle,
+  Menu,
 } from 'lucide-react';
 
 interface ChatMessage {
