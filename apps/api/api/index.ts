@@ -7,23 +7,51 @@ import { TransformInterceptor } from '../src/common/interceptors/transform.inter
 import express from 'express';
 
 const server = express();
-let isBootstrapped = false;
+let cachedApp: any = null;
 
-async function bootstrap() {
-  if (!isBootstrapped) {
-    const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-    app.enableCors({ origin: true, credentials: true });
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+async function bootstrapServer() {
+  if (!cachedApp) {
+    const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+      logger: ['error', 'warn'],
+    });
+
+    app.enableCors({
+      origin: true,
+      credentials: true,
+    });
+
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+      }),
+    );
+
     app.setGlobalPrefix('api');
-    app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
+    app.enableVersioning({
+      type: VersioningType.URI,
+      defaultVersion: '1',
+    });
+
     app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalInterceptors(new TransformInterceptor());
+
     await app.init();
-    isBootstrapped = true;
+    cachedApp = app;
   }
+  return cachedApp;
 }
 
 export default async function handler(req: any, res: any) {
-  await bootstrap();
-  server(req, res);
+  try {
+    await bootstrapServer();
+    server(req, res);
+  } catch (error: any) {
+    console.error('Vercel Serverless Bootstrap Error:', error);
+    res.status(500).json({
+      statusCode: 500,
+      message: 'Vercel Serverless Function Bootstrap Error',
+      error: error?.message || String(error),
+    });
+  }
 }

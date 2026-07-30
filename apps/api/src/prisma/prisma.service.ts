@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@nrt-ai-workforce/database';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService
