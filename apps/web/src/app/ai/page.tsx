@@ -84,6 +84,8 @@ export default function AiWorkspacePage() {
   const [activeNav, setActiveNav] = useState<'conversations' | 'briefings' | 'recommendations' | 'tasks' | 'approvals' | 'history' | 'reports'>('conversations');
   const [selectedReasoning, setSelectedReasoning] = useState<DecisionReasoning | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [showMobileLeftNav, setShowMobileLeftNav] = useState(false);
+  const [showMobileRightPanel, setShowMobileRightPanel] = useState(false);
 
   // Voice State (ChatGPT Voice Feel)
   const [isVoiceActive, setIsVoiceActive] = useState(false);
@@ -347,40 +349,56 @@ export default function AiWorkspacePage() {
       />
 
       {/* TOP BRANDING HEADER BAR */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-fuchsia-600 rounded-xl shadow-lg shadow-purple-500/20 text-white">
-            <Bot className="w-6 h-6 animate-pulse" />
+      <header className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowMobileLeftNav(!showMobileLeftNav)}
+            className="p-2 bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-700 lg:hidden"
+            title="Toggle Menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-fuchsia-600 rounded-xl shadow-lg shadow-purple-500/20 text-white shrink-0">
+            <Bot className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-base font-black text-white tracking-tight">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xs sm:text-base font-black text-white tracking-tight truncate max-w-[180px] sm:max-w-none">
                 Enterprise AI Operations Manager
               </h1>
-              <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold">
+              <span className="hidden sm:inline-block bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-mono font-bold">
                 NRT Operations Intelligence
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-3">
-              <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+            <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
                 Live ERP Connected
               </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-slate-400">GPT-4o Enterprise</span>
+              <span className="text-slate-600 hidden sm:inline">•</span>
+              <span className="text-slate-400 hidden sm:inline">GPT-4o Enterprise</span>
             </p>
           </div>
         </div>
 
-        {/* Right Status Badges */}
-        <div className="flex items-center gap-3 text-xs">
-          <div className="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl font-mono text-slate-300">
+        {/* Right Status Badges & Mobile Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3 text-xs">
+          <div className="hidden sm:flex bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl font-mono text-slate-300">
             Session: <span className="text-purple-400 font-bold">LIVE-9042</span>
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5">
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2.5 sm:px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 text-[11px] sm:text-xs">
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-            <span>Mission Control</span>
+            <span className="hidden sm:inline">Mission Control</span>
+            <span className="sm:hidden">Live</span>
           </div>
+          <button
+            onClick={() => setShowMobileRightPanel(!showMobileRightPanel)}
+            className="p-2 bg-slate-800 text-slate-300 hover:text-white rounded-xl border border-slate-700 lg:hidden"
+            title="Toggle Status Panel"
+          >
+            <Activity className="w-5 h-5 text-purple-400" />
+          </button>
         </div>
       </header>
 
