@@ -21,11 +21,14 @@ export function AiVoiceButton() {
   ]);
   const [inputText, setInputText] = useState('');
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [liveWordChunks, setLiveWordChunks] = useState<string[]>([]);
+  const [liveStreamingText, setLiveStreamingText] = useState<string>('');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const isVoiceModeRef = useRef(false);
   const languageRef = useRef(language);
+  const wordsBufferRef = useRef<string[]>([]);
 
   useEffect(() => {
     isVoiceModeRef.current = isVoiceMode;
@@ -128,18 +131,46 @@ export function AiVoiceButton() {
 
       const recognition = new SpeechRecognition();
       recognition.lang = languageRef.current;
-      recognition.interimResults = false;
+      recognition.interimResults = true; // Real-time word streaming enabled!
+      recognition.continuous = false;
       recognition.maxAlternatives = 1;
 
+      wordsBufferRef.current = [];
+      setLiveWordChunks([]);
+      setLiveStreamingText('');
+
       recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
+      recognition.onend = () => {
+        setIsListening(false);
+        const accumulatedText = wordsBufferRef.current.join(' ').trim();
+        if (accumulatedText) {
+          setInputText(accumulatedText);
+          sendMessage(accumulatedText);
+          wordsBufferRef.current = [];
+          setLiveWordChunks([]);
+          setLiveStreamingText('');
+        }
+      };
       recognition.onerror = () => setIsListening(false);
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript && transcript.trim()) {
-          setInputText(transcript);
-          sendMessage(transcript);
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        const currentText = (finalTranscript || interimTranscript).trim();
+        if (currentText) {
+          const wordsArray = currentText.split(/\s+/).filter(Boolean);
+          wordsBufferRef.current = wordsArray;
+          setLiveWordChunks(wordsArray);
+          setLiveStreamingText(currentText);
         }
       };
 
@@ -304,9 +335,15 @@ export function AiVoiceButton() {
               </div>
             </div>
 
-            {/* Transcript Messages */}
+            {/* Transcript Messages & Live Streaming Preview */}
             <div className="w-full text-center space-y-4 max-h-[220px] overflow-y-auto px-2">
-              {messages.length > 0 && (
+              {isListening && liveStreamingText ? (
+                <div className="animate-in fade-in duration-150">
+                  <p className="text-base md:text-lg font-medium text-fuchsia-300 leading-relaxed italic">
+                    "{liveStreamingText}..."
+                  </p>
+                </div>
+              ) : messages.length > 0 && (
                 <div className="animate-in slide-in-from-bottom-4 fade-in duration-300">
                   <p className="text-base md:text-lg font-medium text-white/90 leading-relaxed">
                     "{messages[messages.length - 1].content}"
@@ -314,6 +351,22 @@ export function AiVoiceButton() {
                 </div>
               )}
             </div>
+
+            {/* Live Real-Time Word Array Stream Visualizer */}
+            {isListening && liveWordChunks.length > 0 && (
+              <div className="w-full flex flex-col items-center gap-1.5 animate-in fade-in duration-200 mt-2">
+                <span className="text-[10px] uppercase font-mono tracking-widest text-fuchsia-400/90">
+                  ⚡ Word Stream Buffer Array ({liveWordChunks.length}):
+                </span>
+                <div className="flex flex-wrap justify-center gap-1 max-h-16 overflow-y-auto px-2">
+                  {liveWordChunks.map((word, idx) => (
+                    <span key={idx} className="px-2 py-0.5 text-xs bg-fuchsia-500/20 text-fuchsia-200 border border-fuchsia-400/30 rounded-md font-mono animate-in zoom-in-75 duration-150 shadow-sm">
+                      [{idx}] {word}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-4 flex items-center gap-2">
               <p className="text-fuchsia-300/90 text-xs font-bold tracking-wider uppercase animate-pulse">

@@ -171,7 +171,7 @@ export class AiOrchestratorService {
       });
       currentPayload.history.push({
         role: 'USER',
-        content: `Tool Execution Observations:\n${toolResultsText.join('\n')}\n\nInstruction: Synthesize these tool execution results into a complete Executive Operations Briefing. Include current status, threshold risk assessment, supplier reorder recommendation, and business/financial impact. Avoid brief one-line answers.`,
+        content: `Tool Execution Observations:\n${toolResultsText.join('\n')}\n\nInstruction: Synthesize these tool execution results into a clear, direct, and scope-appropriate response that answers the user's specific question concisely and accurately. Avoid dumping unnecessary boilerplate reports unless explicitly requested.`,
       });
 
       aiResponse = await this.aiProvider.generateResponse(currentPayload);
@@ -206,6 +206,6 @@ export class AiOrchestratorService {
       return aiResponse.content;
     }
 
-    return `Assalam-u-Alaikum! Main aapka NRT AI Digital Employee hoon. AAP ka ERP System fully operational hai. (Sales Orders: ${dynamicContext?.operationalState?.salesOrdersCount || 0}, Products: ${dynamicContext?.operationalState?.totalProductsCount || 0}, Stock: ${dynamicContext?.operationalState?.totalAvailableStock || 0} units).`;
+    return `Assalam-u-Alaikum! Main aapka NRT AI Digital Employee hoon. Aapka system operational hai. Aap mujh se business, inventory, ya sentiment ke baare me pooch sakte hain.`;
   }
 }
