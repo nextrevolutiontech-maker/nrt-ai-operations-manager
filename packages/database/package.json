@@ -1,6 +1,14 @@
 {
   "name": "@nrt-ai-workforce/database",
   "version": "1.0.0",
+  "main": "./src/generated/client/index.js",
+  "types": "./src/generated/client/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/generated/client/index.d.ts",
+      "default": "./src/generated/client/index.js"
+    }
+  },
   "scripts": {
     "build": "prisma generate"
   },

@@ -1,4 +1,6 @@
-import './common/patches/express-adapter.patch';
+import * as dotenv from 'dotenv';
+dotenv.config();
+import './common/patches/express-adapter-patch';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';

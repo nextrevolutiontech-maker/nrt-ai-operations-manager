@@ -1,4 +1,4 @@
-import '../src/common/patches/express-adapter.patch';
+import '../src/common/patches/express-adapter-patch';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
