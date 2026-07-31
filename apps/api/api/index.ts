@@ -10,6 +10,16 @@ import express from 'express';
 const server = express();
 let cachedApp: any = null;
 
+server.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    message: 'NRT AI Operations Manager API is live and operational 🚀',
+    version: '1.0.0',
+    documentation: '/api/v1',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 async function bootstrapServer() {
   if (!cachedApp) {
     const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
