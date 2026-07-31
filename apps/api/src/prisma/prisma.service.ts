@@ -10,8 +10,15 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   constructor() {
-    const connectionString = process.env.DATABASE_URL;
-    const pool = new Pool({ connectionString });
+    const connectionString =
+      process.env.DATABASE_URL ||
+      'postgresql://neondb_owner:npg_L8HcwB3dlVYD@ep-floral-sky-atp441ii-pooler.c-9.us-east-1.aws.neon.tech/neondb?sslmode=require';
+    const pool = new Pool({
+      connectionString,
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
     const adapter = new PrismaPg(pool);
     super({
       adapter,
