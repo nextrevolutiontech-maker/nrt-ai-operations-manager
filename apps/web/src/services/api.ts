@@ -1,9 +1,23 @@
 import axios from 'axios';
 import { useAuthStore } from '../hooks/useAuth';
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  'https://nrt-ai-operations-manager-api-84eh.vercel.app/api/v1';
+const getApiUrl = () => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  const isBrowser = typeof window !== 'undefined';
+  const isLocalhost =
+    isBrowser &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1');
+
+  // If running in production browser but envUrl points to localhost, use live Vercel backend
+  if (isBrowser && !isLocalhost && envUrl && envUrl.includes('localhost')) {
+    return 'https://nrt-ai-operations-manager-api-84eh.vercel.app/api/v1';
+  }
+
+  return envUrl || 'https://nrt-ai-operations-manager-api-84eh.vercel.app/api/v1';
+};
+
+export const API_URL = getApiUrl();
 
 export const api = axios.create({
   baseURL: API_URL,
