@@ -9,9 +9,9 @@ const getApiUrl = () => {
     (window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1');
 
-  // If running in production browser but envUrl points to localhost, use live Vercel backend
-  if (isBrowser && !isLocalhost && envUrl && envUrl.includes('localhost')) {
-    return 'https://nrt-ai-operations-manager-api-84eh.vercel.app/api/v1';
+  // When running locally in browser, connect to local NestJS dev server on port 3001
+  if (isLocalhost) {
+    return 'http://localhost:3001/api/v1';
   }
 
   return envUrl || 'https://nrt-ai-operations-manager-api-84eh.vercel.app/api/v1';

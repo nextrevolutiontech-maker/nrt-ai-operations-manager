@@ -40,15 +40,20 @@ export class GeminiAiProvider implements IAiProvider {
         parts: [{ text: payload.userPrompt }],
       });
 
-      const response = await model.generateContent({ contents });
-      const text = response.response.text();
+      const result = await model.generateContent({ contents });
+      const text = result.response.text();
+      const usageMeta = result.response.usageMetadata;
+
+      const promptTokens = usageMeta?.promptTokenCount ?? 100;
+      const completionTokens = usageMeta?.candidatesTokenCount ?? 150;
+      const totalTokens = usageMeta?.totalTokenCount ?? (promptTokens + completionTokens);
 
       return {
         content: text,
         usage: {
-          promptTokens: 100,
-          completionTokens: 150,
-          totalTokens: 250,
+          promptTokens,
+          completionTokens,
+          totalTokens,
         },
       };
     } catch (error: any) {

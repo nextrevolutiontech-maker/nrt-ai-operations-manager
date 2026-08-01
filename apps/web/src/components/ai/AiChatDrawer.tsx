@@ -131,13 +131,13 @@ export const AiChatDrawer: React.FC<AiChatDrawerProps> = ({ isOpen, onClose }) =
           timestamp: new Date(),
         },
       ]);
-    } catch {
+    } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: `Processed "${textToSend}": All live warehouse stock records are currently synchronized.`,
+          text: `⚠️ Connection Error: Unable to reach AI Operations Manager service (${err?.message || 'Network / Server Error'}). Please check connection.`,
           timestamp: new Date(),
         },
       ]);

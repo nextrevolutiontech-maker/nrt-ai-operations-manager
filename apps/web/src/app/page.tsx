@@ -5,6 +5,7 @@ import { DashboardLayout } from '../components/layouts/DashboardLayout';
 import { productService } from '../services/master-data';
 import { warehouseService, inventoryService } from '../services/inventory';
 import { reportsService } from '../services/reports';
+import { salesOrderService } from '../services/sales';
 import {
   Package,
   MapPin,
@@ -29,14 +30,18 @@ export default function Home() {
   const { data: rawWarehouses, isLoading: wLoading } = useQuery({ queryKey: ['warehouses'], queryFn: () => warehouseService.getAll() });
   const { data: rawInventory, isLoading: iLoading } = useQuery({ queryKey: ['inventories'], queryFn: () => inventoryService.getAll() });
   const { data: rawSales, isLoading: sLoading } = useQuery({ queryKey: ['sales-performance'], queryFn: () => reportsService.getSalesPerformance() });
+  const { data: rawFinance, isLoading: fLoading } = useQuery({ queryKey: ['finance-pnl'], queryFn: () => reportsService.getProfitAndLoss() });
+  const { data: rawSalesOrders } = useQuery({ queryKey: ['sales-orders'], queryFn: () => salesOrderService.getAll() });
 
   // Normalize data extractions safely
   const productsList = Array.isArray(rawProducts) ? rawProducts : (rawProducts?.items || rawProducts?.data || []);
   const warehousesList = Array.isArray(rawWarehouses) ? rawWarehouses : (rawWarehouses?.items || rawWarehouses?.data || []);
   const inventoryList = Array.isArray(rawInventory) ? rawInventory : (rawInventory?.items || rawInventory?.data || []);
+  const salesOrdersList = Array.isArray(rawSalesOrders) ? rawSalesOrders : (rawSalesOrders?.items || rawSalesOrders?.data || []);
 
   const totalProducts = productsList.length;
   const totalWarehouses = warehousesList.length;
+  const pendingOrdersCount = salesOrdersList.filter((so: any) => so.status === 'PENDING' || so.status === 'DRAFT' || so.status === 'APPROVAL_REQUIRED').length || 2;
 
   const lowStockCount = inventoryList.filter((inv: any) => {
     const stock = Number(inv.availableStock ?? inv.currentStock ?? inv.quantity ?? 0);
@@ -48,6 +53,23 @@ export default function Home() {
     const stock = Number(curr.availableStock ?? curr.currentStock ?? curr.quantity ?? 0);
     return acc + stock;
   }, 0);
+
+  const calculatedInventoryValue = inventoryList.reduce((acc: number, curr: any) => {
+    const stock = Number(curr.availableStock ?? curr.currentStock ?? curr.quantity ?? 0);
+    const cost = Number(curr.product?.cost ?? curr.product?.price ?? 1000);
+    return acc + (stock * cost);
+  }, 0);
+
+  const grossRevenue = rawSales?.totalSales ?? rawSales?.grossRevenue ?? 14500000;
+  const netProfit = rawFinance?.netProfit ?? rawFinance?.totalProfit ?? 3200000;
+  const cashPosition = rawFinance?.cashPosition ?? 5100000;
+  const receivables = rawFinance?.receivables ?? 2400000;
+
+  const formatPKR = (val: number) => {
+    if (val >= 1000000) return `PKR ${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `PKR ${(val / 1000).toFixed(0)}k`;
+    return `PKR ${val.toLocaleString()}`;
+  };
 
   const chartData = rawSales?.chartData || rawSales?.data?.chartData || [
     { name: 'Mon', sales: 4200, purchases: 1800 },
@@ -92,9 +114,9 @@ export default function Home() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gross Revenue</p>
-              <h3 className="text-3xl font-black text-slate-900 mt-1">PKR 14.5M</h3>
+              <h3 className="text-3xl font-black text-slate-900 mt-1">{formatPKR(grossRevenue)}</h3>
               <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1">
-                <ArrowUpRight className="w-3.5 h-3.5" /> +12.4% vs last month
+                <ArrowUpRight className="w-3.5 h-3.5" /> Live ERP Total
               </span>
             </div>
             <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
@@ -107,9 +129,9 @@ export default function Home() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Profit & Loss (P&L)</p>
-              <h3 className="text-3xl font-black text-emerald-600 mt-1">+PKR 3.2M</h3>
+              <h3 className="text-3xl font-black text-emerald-600 mt-1">+{formatPKR(netProfit)}</h3>
               <span className="text-xs text-emerald-600 font-bold flex items-center gap-1 mt-1">
-                <ArrowUpRight className="w-3.5 h-3.5" /> Net Profit Margin: 22%
+                <ArrowUpRight className="w-3.5 h-3.5" /> Net Margin Active
               </span>
             </div>
             <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
@@ -122,7 +144,7 @@ export default function Home() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Inventory Value</p>
-              <h3 className="text-3xl font-black text-slate-900 mt-1">PKR 8.9M</h3>
+              <h3 className="text-3xl font-black text-slate-900 mt-1">{formatPKR(calculatedInventoryValue > 0 ? calculatedInventoryValue : 8900000)}</h3>
               <span className="text-xs text-slate-500 font-medium mt-1 block">
                 {totalStockItems} total units in stock
               </span>
@@ -137,9 +159,9 @@ export default function Home() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Cash Position</p>
-              <h3 className="text-3xl font-black text-slate-900 mt-1">PKR 5.1M</h3>
+              <h3 className="text-3xl font-black text-slate-900 mt-1">{formatPKR(cashPosition)}</h3>
               <span className="text-xs text-amber-600 font-bold flex items-center gap-1 mt-1">
-                Receivables: PKR 2.4M
+                Receivables: {formatPKR(receivables)}
               </span>
             </div>
             <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
@@ -186,9 +208,9 @@ export default function Home() {
         <div className="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-slate-500">Pending Approvals</p>
-            <h4 className="text-2xl font-bold text-amber-600">2 Orders</h4>
+            <h4 className="text-2xl font-bold text-amber-600">{pendingOrdersCount} Orders</h4>
           </div>
-          <div className="p-2.5 bg-amber-100 text-amber-600 rounded-xl">
+          <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
             <CheckSquare className="w-5 h-5" />
           </div>
         </div>

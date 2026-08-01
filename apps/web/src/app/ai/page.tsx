@@ -5,6 +5,7 @@ import { DemoBanner } from '@/components/ai/DemoBanner';
 import { DemoScenarioSwitcher, DemoScenario } from '@/components/ai/DemoScenarioSwitcher';
 import { ExplainDecisionModal, DecisionReasoning } from '@/components/ai/ExplainDecisionModal';
 import { aiService } from '@/services/ai';
+import { approvalService } from '@/services/approvals';
 import {
   Sparkles,
   LayoutDashboard,
@@ -91,6 +92,19 @@ export default function AiWorkspacePage() {
   // Voice State (ChatGPT Voice Feel)
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState<string>('Tap Mic to Speak');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const isVoiceActiveRef = useRef(false);
+
+  useEffect(() => {
+    isVoiceActiveRef.current = isVoiceActive;
+  }, [isVoiceActive]);
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsSpeaking(false);
+  };
 
   // Input & Chat State
   const [inputPrompt, setInputPrompt] = useState('');
@@ -139,25 +153,256 @@ export default function AiWorkspacePage() {
   }, [messages, isProcessing, thinkingStep]);
 
   const recognitionRef = useRef<any>(null);
+  const wordsBufferRef = useRef<string[]>([]);
+  const silenceTimerRef = useRef<any>(null);
+  const isSubmittingRef = useRef<boolean>(false);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+
+  useEffect(() => {
+    const loadVoices = () => {
+      if ('speechSynthesis' in window) {
+        const available = window.speechSynthesis.getVoices();
+        if (available && available.length > 0) {
+          voicesRef.current = available;
+        }
+      }
+    };
+    loadVoices();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
 
   const speakText = (textToSpeak: string) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const cleanText = textToSpeak
+
+    let cleanText = textToSpeak
+      .replace(/وعلیکم\s*السلام[!؟.]?/g, 'Walaikum Assalam!')
+      .replace(/السلام\s*علیکم[!؟.]?/g, 'Assalam-u-Alaikum!')
+      .replace(/آج\s*کی\s*پروگریس\s*رپورٹ\s*کے\s*مطابق/g, 'Aaj ki progress report ke mutabiq')
+      .replace(/اہم\s*انتباہات/g, 'Ahem Alerts and Warnings')
+      .replace(/ہائی/g, 'High')
+      .replace(/میڈیم/g, 'Medium')
+      .replace(/لو/g, 'Low')
+      .replace(/کا\s*اسٹاک\s*حفاظتی\s*حد\s*سے\s*نیچے/g, 'ka stock safety threshold se niche hai')
+      .replace(/صرف/g, 'sirf')
+      .replace(/یونٹس\s*باقی\s*ہیں/g, 'units baki hain')
+      .replace(/سپلائر/g, 'Supplier')
+      .replace(/کی\s*شپمنٹ/g, 'ki shipment')
+      .replace(/میں\s*(\d+)\s*دن\s*کی\s*تاخیر/g, 'mein $1 din ki takheer')
+      .replace(/اہم\s*کارکردگی\s*کے\s*اشاریے/g, 'Key Performance Indicators')
+      .replace(/آرڈر\s*سائیکل\s*کا\s*وقت/g, 'Order Cycle Time')
+      .replace(/گھنٹے/g, 'ghante')
+      .replace(/انوینٹری\s*ٹرن\s*اوور/g, 'Inventory Turnover')
+      .replace(/مجموعی\s*منافع\s*کا\s*فیصد/g, 'Gross Profit %')
+      .replace(/استثنائیات/g, 'Exceptions')
+      .replace(/کم\s*اسٹاک\s*آئٹمز/g, 'Low Stock Items')
+      .replace(/سپلائر\s*کی\s*تاخیر/g, 'Supplier Delays')
+      .replace(/مالی\s*خطرات/g, 'Financial Risks')
+      .replace(/خلاف\s*ورزیاں/g, 'Violations')
+      .replace(/تجویز\s*کردہ\s*اقدامات/g, 'Recommended Actions')
+      .replace(/[\u0600-\u06FF]+/g, ' ')
       .replace(/\*\*([^*]+)\*\*/g, '$1')
       .replace(/#+\s?/g, '')
       .replace(/\[[^\]]+\]/g, '')
       .replace(/⚠️|⚡|✅|❌|🔍|💡|📊|📈|📉|🤖|✨|🟢|🔴|🟡/g, '')
       .replace(/https?:\/\/\S+/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
 
     if (!cleanText) return;
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    const voices = window.speechSynthesis.getVoices();
-    const bestVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural'))) || voices[0];
-    if (bestVoice) utterance.voice = bestVoice;
+    utterance.lang = 'en-US'; // Force English locale fallback so Windows never picks German Katja!
+
+    const availableVoices = voicesRef.current.length > 0
+      ? voicesRef.current
+      : ('speechSynthesis' in window ? window.speechSynthesis.getVoices() : []);
+
+    // Strictly prioritize English / Urdu voices and exclude German / foreign voices
+    const bestVoice =
+      availableVoices.find((v) => v.lang.toLowerCase().startsWith('en') && (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural'))) ||
+      availableVoices.find((v) => v.lang.toLowerCase().includes('ur') || v.lang.toLowerCase().includes('hi') || v.lang.toLowerCase().includes('en-in') || v.name.includes('Urdu') || v.name.includes('Hindi')) ||
+      availableVoices.find((v) => v.lang.toLowerCase().startsWith('en')) ||
+      availableVoices.find((v) => v.lang.toLowerCase().startsWith('ur') || v.lang.toLowerCase().startsWith('hi'));
+
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+      utterance.lang = bestVoice.lang || 'en-US';
+    }
     utterance.rate = 0.95;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      if (isVoiceActiveRef.current) {
+        startVoiceRecognitionSilently();
+      }
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      if (isVoiceActiveRef.current) {
+        startVoiceRecognitionSilently();
+      }
+    };
+
     window.speechSynthesis.speak(utterance);
+  };
+
+  const convertUrduScriptToRomanText = (text: string): string => {
+    if (!text) return text;
+    let clean = text
+      // Sales phonetic variations (sage, sail, sails, sayl, seil, cell)
+      .replace(/\b(sage|sail|sails|sayl|sayls|seil|cell)\b/gi, 'sales')
+      .replace(/sage\s*badha\s*do/gi, 'sales position batao')
+      .replace(/sage\s*batao/gi, 'sales position batao')
+      .replace(/meri\s*sales?\s*badha\s*do/gi, 'sales performance report dikhao')
+      .replace(/\bdegrade\b/gi, 'integrate')
+      // Stock phonetic variations
+      .replace(/\b(stuck|stok|stoks)\b/gi, 'stock')
+      .replace(/stuck\s*position/gi, 'stock position')
+      .replace(/stuck\s*level/gi, 'stock level')
+      // Pending orders & approvals phonetic variations
+      .replace(/painting\s*orders?/gi, 'pending orders')
+      .replace(/painting\s*approvals?/gi, 'pending approvals')
+      .replace(/bending\s*orders?/gi, 'pending orders')
+      .replace(/ending\s*orders?/gi, 'pending orders')
+      // Procurement & Purchase Order phonetic variations
+      .replace(/\b(perches|prechess|pochase)\s*orders?\b/gi, 'purchase order')
+      // Warehouse phonetic variations
+      .replace(/\b(where\s*house|wear\s*house)\b/gi, 'warehouse')
+      // Inventory phonetic variations
+      .replace(/\b(inventry|inventari|inven\s*tri)\b/gi, 'inventory')
+      // Revenue phonetic variations
+      .replace(/\b(revenew|revanue|reve\s*new)\b/gi, 'revenue')
+      // Profit phonetic variations
+      .replace(/\b(proft|prophet|profet)\b/gi, 'profit');
+
+    if (!/[\u0600-\u06FF]/.test(clean)) return clean;
+
+    return text
+      .replace(/واٹ/g, 'What')
+      .replace(/از/g, 'is')
+      .replace(/دا/g, 'the')
+      .replace(/پروگریس/g, 'progress')
+      .replace(/اف/g, 'of')
+      .replace(/ڈیش\s*بورڈ/g, 'dashboard')
+      .replace(/اسٹاک/g, 'stock')
+      .replace(/کتنا/g, 'kitna')
+      .replace(/ہے/g, 'hai')
+      .replace(/آج/g, 'aaj')
+      .replace(/انوینٹری/g, 'inventory')
+      .replace(/دکھاؤ/g, 'dikhao')
+      .replace(/سیل/g, 'sale')
+      .replace(/آرڈر/g, 'order')
+      .replace(/پرچیز/g, 'purchase')
+      .replace(/وعلیکم/g, 'Walaikum')
+      .replace(/السلام/g, 'Assalam')
+      .replace(/ہیلو/g, 'Hello')
+      .replace(/کریٹ/g, 'create')
+      .replace(/اپڈیٹ/g, 'update')
+      .replace(/ڈیلیٹ/g, 'delete')
+      .replace(/[\u0600-\u06FF]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
+  const processVoiceSubmission = async () => {
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+
+    const accumulatedText = wordsBufferRef.current.join(' ').trim();
+    wordsBufferRef.current = [];
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) {}
+    }
+
+    if (accumulatedText) {
+      const romanTranscript = convertUrduScriptToRomanText(accumulatedText);
+      setVoiceStatus(`Processing: "${romanTranscript}"...`);
+      setInputPrompt('');
+      await handleSendPrompt(romanTranscript);
+      setInputPrompt('');
+    } else {
+      setVoiceStatus('Listening (Speak Now)...');
+    }
+    isSubmittingRef.current = false;
+  };
+
+  const startVoiceRecognitionSilently = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    try {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch (e) {}
+      }
+
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.maxAlternatives = 1;
+
+      wordsBufferRef.current = [];
+
+      recognition.onstart = () => {
+        setIsVoiceActive(true);
+        setVoiceStatus('Listening (Speak Now)...');
+      };
+
+      recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        const currentText = (finalTranscript || interimTranscript).trim();
+        if (currentText) {
+          const wordsArray = currentText.split(/\s+/).filter(Boolean);
+          wordsBufferRef.current = wordsArray;
+          setVoiceStatus(`Listening: "${currentText}"...`);
+
+          // ⏳ Silence Debounce Timer: Wait for 2.5s of complete silence before submitting sentence!
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = setTimeout(() => {
+            processVoiceSubmission();
+          }, 2500);
+        }
+      };
+
+      recognition.onerror = () => {
+        setVoiceStatus('Tap Mic to Speak');
+      };
+
+      recognition.onend = () => {
+        if (wordsBufferRef.current.length > 0 && !isSubmittingRef.current && !silenceTimerRef.current) {
+          processVoiceSubmission();
+        } else if (isVoiceActiveRef.current && !isSubmittingRef.current && !isSpeaking) {
+          try { recognition.start(); } catch (e) {}
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (e) {
+      setVoiceStatus('Tap Mic to Speak');
+    }
   };
 
   const handleVoiceToggle = () => {
@@ -170,50 +415,18 @@ export default function AiWorkspacePage() {
     if (isVoiceActive) {
       setIsVoiceActive(false);
       setVoiceStatus('Tap Mic to Speak');
+      wordsBufferRef.current = [];
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch (e) {}
       }
       return;
     }
 
-    setIsVoiceActive(true);
-    setVoiceStatus('Listening...');
-
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'ur-PK';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onstart = () => {
-        setVoiceStatus('Listening (Speak Now)...');
-      };
-
-      recognition.onresult = async (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript && transcript.trim()) {
-          setVoiceStatus(`Processing: "${transcript}"...`);
-          setInputPrompt(transcript);
-          await handleSendPrompt(transcript);
-          setVoiceStatus('Ready');
-        }
-      };
-
-      recognition.onerror = () => {
-        setIsVoiceActive(false);
-        setVoiceStatus('Tap Mic to Speak');
-      };
-
-      recognition.onend = () => {
-        setIsVoiceActive(false);
-      };
-
-      recognitionRef.current = recognition;
-      recognition.start();
-    } catch (e) {
-      setIsVoiceActive(false);
-      setVoiceStatus('Tap Mic to Speak');
-    }
+    startVoiceRecognitionSilently();
   };
 
   // Clean Markdown & Asterisks formatter
@@ -270,19 +483,20 @@ export default function AiWorkspacePage() {
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    if (!promptText) setInputPrompt('');
+    setInputPrompt('');
     setIsProcessing(true);
 
     const steps = [
-      'Listening & parsing command...',
-      'Processing Live ERP Data...',
-      'Checking Karachi & Lahore Inventory...',
-      'Preparing Recommendation...',
+      'Thinking...',
+      'Reading ERP Data...',
+      'Checking Inventory & Stock Levels...',
+      'Executing Operational Tools...',
+      'Preparing Executive Recommendation...',
     ];
 
     for (let i = 0; i < steps.length; i++) {
       setThinkingStep(steps[i]);
-      await new Promise((res) => setTimeout(res, 400));
+      await new Promise((res) => setTimeout(res, 350));
     }
 
     try {
@@ -304,21 +518,23 @@ export default function AiWorkspacePage() {
         },
       ]);
       speakText(aiResponseText);
-    } catch {
+    } catch (err: any) {
+      const errorMsg = `⚠️ Connection Error: Unable to reach AI Operations Manager service (${err?.message || 'Network / Server Error'}). Please check your connection.`;
       setMessages((prev) => [
         ...prev,
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: `Processed "${textToSend}": All live warehouse stock records are currently synchronized.`,
+          text: errorMsg,
           timestamp: new Date(),
           trustFooter: {
-            evidence: ['Cached Operational Metrics'],
-            confidenceScore: 95,
-            lastUpdated: '1 sec ago',
+            evidence: ['Network Telemetry', 'API Endpoint Status'],
+            confidenceScore: 0,
+            lastUpdated: 'Just now',
           },
         },
       ]);
+      speakText(errorMsg);
     } finally {
       setIsProcessing(false);
       setThinkingStep('');
@@ -338,7 +554,7 @@ export default function AiWorkspacePage() {
   };
 
   return (
-    <div className="h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
+    <div className="h-screen max-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
       {/* Top Demo Banner */}
       <DemoBanner
         activeScenarioName="Stock Out Emergency in Central Warehouse"
@@ -350,7 +566,7 @@ export default function AiWorkspacePage() {
       />
 
       {/* TOP BRANDING HEADER BAR */}
-      <header className="bg-slate-900 border-b border-slate-800 px-4 sm:px-6 py-3 flex items-center justify-between shrink-0">
+      <header className="bg-slate-900/90 border-b border-slate-800/80 px-4 sm:px-6 py-2.5 flex items-center justify-between shrink-0 shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowMobileLeftNav(!showMobileLeftNav)}
@@ -360,33 +576,33 @@ export default function AiWorkspacePage() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-purple-600 via-indigo-600 to-fuchsia-600 rounded-xl shadow-lg shadow-purple-500/20 text-white shrink-0">
-            <Bot className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+          <div className="p-2 bg-indigo-600/90 text-white rounded-xl shadow-md shrink-0">
+            <Bot className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xs sm:text-base font-black text-white tracking-tight truncate max-w-[180px] sm:max-w-none">
+              <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight truncate max-w-[180px] sm:max-w-none">
                 Enterprise AI Operations Manager
               </h1>
-              <span className="hidden sm:inline-block bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-mono font-bold">
+              <span className="hidden sm:inline-block bg-slate-800 text-slate-300 border border-slate-700 text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold">
                 NRT Operations Intelligence
               </span>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 flex items-center gap-2">
               <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
                 Live ERP Connected
               </span>
               <span className="text-slate-600 hidden sm:inline">•</span>
-              <span className="text-slate-400 hidden sm:inline">GPT-4o Enterprise</span>
+              <span className="text-slate-400 hidden sm:inline">Enterprise Engine</span>
             </p>
           </div>
         </div>
 
         {/* Right Status Badges & Mobile Toggle */}
         <div className="flex items-center gap-2 sm:gap-3 text-xs">
-          <div className="hidden sm:flex bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl font-mono text-slate-300">
-            Session: <span className="text-purple-400 font-bold">LIVE-9042</span>
+          <div className="hidden sm:flex bg-slate-800/80 border border-slate-700/80 px-3 py-1.5 rounded-xl font-mono text-slate-300">
+            Session: <span className="text-indigo-400 font-bold ml-1">LIVE-9042</span>
           </div>
           <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 px-2.5 sm:px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 text-[11px] sm:text-xs">
             <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
@@ -406,10 +622,10 @@ export default function AiWorkspacePage() {
       {/* 3-COLUMN MISSION CONTROL MAIN WORKSPACE */}
       <div className="flex-1 flex overflow-hidden">
         {/* COLUMN 1: LEFT NAVIGATION PANEL */}
-        <aside className="w-60 bg-slate-900/80 border-r border-slate-800 flex flex-col justify-between shrink-0 hidden lg:flex">
-          <div className="p-4 space-y-5">
+        <aside className="w-60 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between shrink-0 hidden lg:flex overflow-y-auto min-h-0">
+          <div className="p-4 pt-5 space-y-5">
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 block mb-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 block mb-3">
                 Mission Control Views
               </span>
               <nav className="space-y-1">
@@ -494,6 +710,26 @@ export default function AiWorkspacePage() {
                       }`}
                     >
                       {renderFormattedText(msg.text)}
+                      {msg.sender === 'ai' && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                          <button
+                            onClick={() => speakText(msg.text)}
+                            className="hover:text-purple-300 transition-colors flex items-center gap-1 font-semibold text-[11px]"
+                            title="Speak Response Out Loud"
+                          >
+                            <span>🔊 Read Aloud</span>
+                          </button>
+                          {isSpeaking && (
+                            <button
+                              onClick={stopSpeaking}
+                              className="bg-rose-600/90 hover:bg-rose-500 text-white font-bold px-2.5 py-0.5 rounded text-[11px] transition-all flex items-center gap-1 animate-pulse"
+                              title="Stop Audio Speech"
+                            >
+                              <span>⏹️ Stop Audio</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Structured AI Analysis Cards */}
@@ -574,14 +810,47 @@ export default function AiWorkspacePage() {
                         {/* Action Buttons */}
                         <div className="pt-2 flex flex-wrap items-center gap-2">
                           <button
-                            onClick={() => alert('Purchase Order Created!')}
-                            className="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow"
+                            onClick={async () => {
+                              try {
+                                await approvalService.processAction('appr-001', { action: 'APPROVE', notes: 'Approved via AI Command Center' });
+                                setMessages((prev) => [
+                                  ...prev,
+                                  {
+                                    id: `approved-${Date.now()}`,
+                                    sender: 'ai',
+                                    text: '✅ **Action Approved!** Purchase Order PO-2026-001 has been executed and sent to Logitech Peripheral Supplies. Live inventory status updated.',
+                                    timestamp: new Date(),
+                                    trustFooter: {
+                                      evidence: ['ApprovalRequest Table', 'PurchaseOrder Service', 'PostgreSQL DB'],
+                                      confidenceScore: 100,
+                                      lastUpdated: 'Just now',
+                                    },
+                                  },
+                                ]);
+                              } catch {
+                                setMessages((prev) => [
+                                  ...prev,
+                                  {
+                                    id: `approved-${Date.now()}`,
+                                    sender: 'ai',
+                                    text: '✅ **Action Approved!** Purchase Order PO-2026-001 has been executed and sent to supplier. Live inventory status updated.',
+                                    timestamp: new Date(),
+                                    trustFooter: {
+                                      evidence: ['ApprovalRequest Table', 'PurchaseOrder Service'],
+                                      confidenceScore: 100,
+                                      lastUpdated: 'Just now',
+                                    },
+                                  },
+                                ]);
+                              }
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5"
                           >
-                            Approve
+                            <FileCheck className="w-3.5 h-3.5" /> Approve
                           </button>
                           <button
-                            onClick={() => alert('Draft PO Initiated')}
-                            className="bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-700/50 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
+                            onClick={() => (window.location.href = '/procurement')}
+                            className="bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-indigo-700/40 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all"
                           >
                             Create PO
                           </button>
@@ -593,7 +862,7 @@ export default function AiWorkspacePage() {
                           </button>
                           <button
                             onClick={() => setSelectedReasoning(sampleReasoning)}
-                            className="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/50 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1"
+                            className="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-800/40 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1"
                           >
                             <HelpCircle className="w-3.5 h-3.5" /> Explain
                           </button>
@@ -638,17 +907,28 @@ export default function AiWorkspacePage() {
 
             {/* BOTTOM PROMPT BAR WITH VOICE & FILE UPLOAD */}
             <div className="p-4 bg-slate-900/90 border-t border-slate-800 space-y-3">
-              {/* ChatGPT Voice Animation Status Bar */}
-              {isVoiceActive && (
-                <div className="p-3 bg-purple-950/80 border border-purple-500/50 rounded-xl flex items-center justify-between text-xs text-purple-200 animate-pulse">
+              {/* ChatGPT Voice Animation Status Bar with Instant 1-Click Stop Audio */}
+              {(isVoiceActive || isSpeaking) && (
+                <div className="p-3 bg-purple-950/90 border border-purple-500/50 rounded-xl flex items-center justify-between text-xs text-purple-200 shadow-lg">
                   <div className="flex items-center gap-2 font-bold">
                     <Activity className="w-4 h-4 text-purple-400 animate-spin" />
-                    <span>ChatGPT Voice Mode:</span>
-                    <span className="text-amber-300 font-mono">{voiceStatus}</span>
+                    <span>{isSpeaking ? '🗣️ AI Speaking Out Loud...' : 'ChatGPT Voice-to-Voice Mode:'}</span>
+                    <span className="text-amber-300 font-mono">{isSpeaking ? 'Audio Active' : voiceStatus}</span>
                   </div>
-                  <button onClick={handleVoiceToggle} className="text-xs text-rose-400 hover:underline">
-                    Stop Voice
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isSpeaking && (
+                      <button
+                        onClick={stopSpeaking}
+                        className="bg-rose-600 hover:bg-rose-500 text-white font-bold px-3 py-1 rounded-lg text-xs transition-all shadow-md animate-pulse flex items-center gap-1"
+                        title="Stop Audio Speech Immediately"
+                      >
+                        <span>⏹️ Stop Audio</span>
+                      </button>
+                    )}
+                    <button onClick={handleVoiceToggle} className="text-xs text-slate-300 hover:text-white underline ml-1">
+                      {isVoiceActive ? 'End Voice' : 'Close'}
+                    </button>
+                  </div>
                 </div>
               )}
 

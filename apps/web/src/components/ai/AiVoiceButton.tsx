@@ -46,8 +46,51 @@ export function AiVoiceButton() {
   }, [messages, isOpen, isVoiceMode]);
 
   // Clean text before passing to SpeechSynthesis so markdown/emojis/logs aren't read aloud
+  const convertUrduScriptToRoman = (text: string): string => {
+    if (!text) return text;
+    if (!/[\u0600-\u06FF]/.test(text)) return text;
+
+    return text
+      .replace(/وعلیکم\s*السلام[!؟.]?/g, 'Walaikum Assalam!')
+      .replace(/السلام\s*علیکم[!؟.]?/g, 'Assalam-u-Alaikum!')
+      .replace(/آج\s*کی\s*پروگریس\s*رپورٹ\s*کے\s*مطابق/g, 'Aaj ki progress report ke mutabiq')
+      .replace(/اہم\s*انتباہات/g, 'Ahem Alerts & Warnings')
+      .replace(/ہائی/g, 'High')
+      .replace(/میڈیم/g, 'Medium')
+      .replace(/لو/g, 'Low')
+      .replace(/کا\s*اسٹاک\s*حفاظتی\s*حد\s*سے\s*نیچے/g, 'ka stock safety threshold se niche hai')
+      .replace(/صرف/g, 'sirf')
+      .replace(/یونٹس\s*باقی\s*ہیں/g, 'units baki hain')
+      .replace(/سپلائر/g, 'Supplier')
+      .replace(/کی\s*شپمنٹ/g, 'ki shipment')
+      .replace(/میں\s*(\d+)\s*دن\s*کی\s*تاخیر/g, 'mein $1 din ki takheer')
+      .replace(/اہم\s*کارکردگی\s*کے\s*اشاریے/g, 'Key Performance Indicators')
+      .replace(/آرڈر\s*سائیکل\s*کا\s*وقت/g, 'Order Cycle Time')
+      .replace(/گھنٹے/g, 'ghante')
+      .replace(/انوینٹری\s*ٹرن\s*اوور/g, 'Inventory Turnover')
+      .replace(/مجموعی\s*منافع\s*کا\s*فیصد/g, 'Gross Profit %')
+      .replace(/استثنائیات/g, 'Exceptions')
+      .replace(/کم\s*اسٹاک\s*آئٹمز/g, 'Low Stock Items')
+      .replace(/سپلائر\s*کی\s*تاخیر/g, 'Supplier Delays')
+      .replace(/مالی\s*خطرات/g, 'Financial Risks')
+      .replace(/خلاف\s*ورزیاں/g, 'Violations')
+      .replace(/تجویز\s*کردہ\s*اقدامات/g, 'Recommended Actions')
+      .replace(/کا\s*بین\s*ویر\s*ہاؤس\s*اسٹاک\s*ٹرانسفر\s*کریں/g, 'ka inter warehouse stock transfer karein')
+      .replace(/خام\s*مال\s*کی\s*دوبارہ\s*بھرپائی\s*کے\s*لیے/g, 'Raw material replenishment ke liye')
+      .replace(/تقسیم\s*شدہ\s*بلینکٹ\s*PO\s*جاری\s*کریں/g, 'distributed blanket PO issue karein')
+      .replace(/آج\s*کے\s*دن\s*میں/g, 'Aaj ke din mein')
+      .replace(/آرڈرز\s*بھیجے\s*گئے/g, 'orders bheje gaye')
+      .replace(/جو\s*کہ\s*ہدف/g, 'jo ke target')
+      .replace(/کے\s*قریب\s*ہیں/g, 'ke qareeb hain')
+      .replace(/جس\s*کی\s*کامیابی\s*کی\s*شرح/g, 'jis ki success rate')
+      .replace(/[\u0600-\u06FF]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+
   const sanitizeTextForSpeech = (rawText: string): string => {
-    return rawText
+    const textWithoutUrdu = convertUrduScriptToRoman(rawText);
+    return textWithoutUrdu
       .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove markdown bold
       .replace(/#+\s?/g, '') // Remove headings
       .replace(/\[[^\]]+\]/g, '') // Remove tags
@@ -77,13 +120,17 @@ export function AiVoiceButton() {
       if (urduVoice) utterance.voice = urduVoice;
       utterance.lang = urduVoice?.lang || 'ur-PK';
     } else {
-      // Prioritize 100% FREE Microsoft Natural Online / Google Neural Voices
-      const bestVoice = voices.find(v => (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural')) && v.lang.toLowerCase().startsWith('en'))
-        || voices.find(v => v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online'))
-        || voices.find(v => v.lang.toLowerCase().startsWith(languageRef.current.split('-')[0]))
-        || voices[0];
-      if (bestVoice) utterance.voice = bestVoice;
-      utterance.lang = bestVoice?.lang || languageRef.current;
+      // Prioritize 100% FREE Microsoft Natural Online / Google Neural Voices (English / Urdu only)
+      const bestVoice =
+        voices.find(v => v.lang.toLowerCase().startsWith('en') && (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Google') || v.name.includes('Neural'))) ||
+        voices.find(v => (v.lang.toLowerCase().includes('ur') || v.lang.toLowerCase().includes('hi') || v.name.includes('Urdu') || v.name.includes('Hindi'))) ||
+        voices.find(v => v.lang.toLowerCase().startsWith('en'));
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang || 'en-US';
+      } else {
+        utterance.lang = 'en-US';
+      }
     }
 
     utterance.rate = 0.95;
@@ -217,7 +264,11 @@ export function AiVoiceButton() {
   const startVoiceMode = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Your browser does not support Speech Recognition. Please use Google Chrome or Edge.');
+      setIsOpen(true);
+      setMessages(prev => [
+        ...prev,
+        { role: 'ai', content: '💡 Voice Speech-to-Text works best in Google Chrome or MS Edge. Standard text input is active below.' }
+      ]);
       return;
     }
 
