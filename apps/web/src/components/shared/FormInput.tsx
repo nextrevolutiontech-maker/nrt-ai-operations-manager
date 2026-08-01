@@ -19,7 +19,7 @@ export function FormInput({ label, error, registration, className, type = 'text'
         <input
           type={type}
           className={cn(
-            "block w-full px-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all",
+            "block w-full px-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all bg-white text-slate-900",
             error 
               ? "border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500" 
               : "border-slate-200 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-300",

@@ -99,7 +99,7 @@ export default function LoginPage() {
                   {...register('email')}
                   type="email"
                   placeholder="admin@example.com"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all ${
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all bg-white text-slate-900 ${
                     errors.email 
                       ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' 
                       : 'border-slate-200 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-300'
@@ -122,7 +122,7 @@ export default function LoginPage() {
                   {...register('password')}
                   type="password"
                   placeholder="••••••••"
-                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all ${
+                  className={`block w-full pl-10 pr-3 py-2.5 border rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 transition-all bg-white text-slate-900 ${
                     errors.password 
                       ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' 
                       : 'border-slate-200 placeholder-slate-400 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-300'
