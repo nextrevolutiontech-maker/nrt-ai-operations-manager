@@ -39,6 +39,7 @@ export class InventoriesService {
             sku: true,
             cost: true,
             price: true,
+            minStockLevel: true,
             unit: { select: { symbol: true } },
           },
         },
@@ -51,14 +52,16 @@ export class InventoriesService {
     const total = await this.prisma.inventory.count({ where });
 
     const mapped = inventories.map((inv) => {
-      const current = Number(inv.currentStock);
-      const cost = Number(inv.product.cost);
+      const current = Number(inv.availableStock || 0);
+      const cost = Number(inv.product?.cost || 0);
+      const minStock = Number(inv.product?.minStockLevel || 5);
 
-      const isLowStock = current > 0 && current <= Number(inv.minStockLevel);
+      const isLowStock = current > 0 && current <= minStock;
       const isOutOfStock = current <= 0;
 
       return {
         ...inv,
+        currentStock: current,
         valuation: current * cost,
         status: isOutOfStock
           ? 'OUT_OF_STOCK'
@@ -100,16 +103,18 @@ export class InventoriesService {
 
     if (!inventory) throw new NotFoundException('Inventory record not found');
 
-    const current = Number(inventory.currentStock);
-    const cost = Number(inventory.product.cost);
+    const current = Number(inventory.availableStock || 0);
+    const cost = Number(inventory.product?.cost || 0);
+    const minStock = Number(inventory.product?.minStockLevel || 5);
 
     return {
       ...inventory,
+      currentStock: current,
       valuation: current * cost,
       status:
         current <= 0
           ? 'OUT_OF_STOCK'
-          : current <= Number(inventory.minStockLevel)
+          : current <= minStock
             ? 'LOW_STOCK'
             : 'IN_STOCK',
     };

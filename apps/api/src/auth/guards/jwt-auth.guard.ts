@@ -13,16 +13,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   handleRequest(err: any, user: any, info: any) {
     if (err || !user) {
-      // Development & Demo fallback: Provide default System Admin context if unauthenticated
-      return {
-        id: 'USER-01',
-        email: 'admin@example.com',
-        firstName: 'System',
-        lastName: 'Admin',
-        companyId: 'COMP-01',
-        roles: ['Admin'],
-        permissions: ['read:all', 'write:all'],
-      };
+      throw err || new UnauthorizedException('Authentication token is missing or expired');
     }
     return user;
   }

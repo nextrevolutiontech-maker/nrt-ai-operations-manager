@@ -300,16 +300,16 @@ export class AnalyticsService {
     
     const revenueEntries = await (this.prisma as any).journalEntry.aggregate({
       where: {
-        companyId,
-        account: { type: 'REVENUE' }
+        journal: { companyId },
+        account: { accountType: 'REVENUE' }
       },
       _sum: { credit: true, debit: true }
     });
 
     const expenseEntries = await (this.prisma as any).journalEntry.aggregate({
       where: {
-        companyId,
-        account: { type: 'EXPENSE' }
+        journal: { companyId },
+        account: { accountType: 'EXPENSE' }
       },
       _sum: { debit: true, credit: true }
     });

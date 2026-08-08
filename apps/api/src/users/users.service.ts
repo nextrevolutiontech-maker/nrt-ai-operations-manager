@@ -6,8 +6,9 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async findByEmail(email: string) {
+    const cleanEmail = email.trim();
     return this.prisma.user.findFirst({
-      where: { email },
+      where: { email: { equals: cleanEmail, mode: 'insensitive' } },
       include: {
         company: true,
         userRoles: {

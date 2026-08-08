@@ -1,15 +1,30 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
+const fs = require('fs');
+const path = require('path');
+
+const envPath = path.resolve(__dirname, '../../../.env');
+if (fs.existsSync(envPath)) {
+  const content = fs.readFileSync(envPath, 'utf8');
+  content.split('\n').forEach(line => {
+    const match = line.match(/^\s*([\w.-]+)\s*=\s*"(.*)"\s*$/) || line.match(/^\s*([\w.-]+)\s*=\s*(.*)\s*$/);
+    if (match) {
+      process.env[match[1]] = match[2].trim();
+    }
+  });
+}
+
+const { PrismaClient } = require('@prisma/client');
+const { Pool } = require('pg');
+const { PrismaPg } = require('@prisma/adapter-pg');
 
 const connectionString = process.env.DATABASE_URL;
+console.log('Connecting to DATABASE_URL:', connectionString ? connectionString.substring(0, 45) + '...' : 'NONE');
+
 const pool = new Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Starting enterprise ERP seed...');
+  console.log('Starting enterprise ERP seed script...');
 
   // 1. Default Company
   const company = await prisma.company.upsert({
@@ -133,7 +148,7 @@ async function main() {
     { name: 'Peripherals & Accessories', description: 'Keyboards, mice, monitors, and docks' },
     { name: 'Office Ergonomics', description: 'Ergonomic chairs, sit-stand desks, and accessories' },
   ];
-  const categories: any[] = [];
+  const categories = [];
   for (const c of categoryData) {
     const cat = await prisma.category.upsert({
       where: { companyId_name: { companyId: company.id, name: c.name } },
@@ -149,7 +164,7 @@ async function main() {
     { name: 'Logitech Business', description: 'Professional input devices and video conferencing' },
     { name: 'Dell Technologies', description: 'Latitude & XPS enterprise laptops' },
   ];
-  const brands: any[] = [];
+  const brands = [];
   for (const b of brandData) {
     const brand = await prisma.brand.upsert({
       where: { companyId_name: { companyId: company.id, name: b.name } },
@@ -168,7 +183,7 @@ async function main() {
     { name: 'NRT Ergonomic Executive Desk Chair', sku: 'NRT-CHR-EX', price: 85000, cost: 45000, cat: categories[3].id, brand: brands[0].id, minStock: 10 },
   ];
 
-  const products: any[] = [];
+  const products = [];
   for (const p of productsToCreate) {
     const prod = await prisma.product.upsert({
       where: { companyId_sku: { companyId: company.id, sku: p.sku } },
@@ -181,7 +196,7 @@ async function main() {
         cost: p.cost,
         categoryId: p.cat,
         brandId: p.brand,
-        unitId: pcsUnit ? pcsUnit.id : undefined,
+        unitId: pcsUnit ? pcsUnit.id : null,
         minStockLevel: p.minStock,
       },
     });
@@ -195,7 +210,7 @@ async function main() {
     { name: 'Islamabad Capital Technology Park', location: 'National Tech Park, Islamabad' },
   ];
 
-  const warehouses: any[] = [];
+  const warehouses = [];
   for (const w of warehousesToCreate) {
     const existing = await prisma.warehouse.findFirst({
       where: { companyId: company.id, name: w.name },
@@ -244,7 +259,7 @@ async function main() {
     { name: 'Apple Wholesale Middle East', contactPerson: 'Sarah Jenkins', email: 'b2b@apple.me', phone: '+971 4 8009988' },
     { name: 'Logitech Authorized Distro', contactPerson: 'Bilal Ahmed', email: 'sales@logi-distro.pk', phone: '+92 42 35558899' },
   ];
-  const suppliers: any[] = [];
+  const suppliers = [];
   for (const s of supplierData) {
     const existing = await prisma.supplier.findFirst({
       where: { companyId: company.id, email: s.email },
@@ -271,7 +286,7 @@ async function main() {
     { companyName: 'Nexus AI Solutions', contactPerson: 'Dr. Tariq Mahmood', email: 'info@nexus-ai.io', phone: '+92 51 8887766', city: 'Islamabad' },
     { companyName: 'Apex Global Logistics', contactPerson: 'Zayn Malik', email: 'ops@apex-global.com', phone: '+92 42 37771122', city: 'Lahore' },
   ];
-  const customers: any[] = [];
+  const customers = [];
   for (const c of customerData) {
     const existing = await prisma.customer.findFirst({
       where: { companyId: company.id, companyName: c.companyName },
@@ -296,14 +311,14 @@ async function main() {
 
   // 11. Chart of Accounts
   const accountData = [
-    { code: '1010', name: 'Meezan Bank Operations Account', type: 'ASSET' as const },
-    { code: '1200', name: 'Accounts Receivable (Trade Debtors)', type: 'ASSET' as const },
-    { code: '1300', name: 'Inventory Asset Account', type: 'ASSET' as const },
-    { code: '2010', name: 'Accounts Payable (Trade Creditors)', type: 'LIABILITY' as const },
-    { code: '3010', name: 'Owner Share Capital', type: 'EQUITY' as const },
-    { code: '4010', name: 'Enterprise Hardware Sales Revenue', type: 'REVENUE' as const },
-    { code: '5010', name: 'Cost of Goods Sold (COGS)', type: 'EXPENSE' as const },
-    { code: '6010', name: 'Logistics & Warehousing Expense', type: 'EXPENSE' as const },
+    { code: '1010', name: 'Meezan Bank Operations Account', type: 'ASSET' },
+    { code: '1200', name: 'Accounts Receivable (Trade Debtors)', type: 'ASSET' },
+    { code: '1300', name: 'Inventory Asset Account', type: 'ASSET' },
+    { code: '2010', name: 'Accounts Payable (Trade Creditors)', type: 'LIABILITY' },
+    { code: '3010', name: 'Owner Share Capital', type: 'EQUITY' },
+    { code: '4010', name: 'Enterprise Hardware Sales Revenue', type: 'REVENUE' },
+    { code: '5010', name: 'Cost of Goods Sold (COGS)', type: 'EXPENSE' },
+    { code: '6010', name: 'Logistics & Warehousing Expense', type: 'EXPENSE' },
   ];
 
   for (const acc of accountData) {
@@ -337,13 +352,13 @@ async function main() {
               productId: products[0].id,
               quantity: 2,
               unitCost: 620000,
-              total: 1240000,
+              totalPrice: 1240000,
             },
             {
               productId: products[2].id,
               quantity: 20,
               unitCost: 21000,
-              total: 420000,
+              totalPrice: 420000,
             },
           ],
         },

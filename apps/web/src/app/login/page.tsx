@@ -11,7 +11,7 @@ import { Loader2, Lock, Mail, ArrowRight } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Please enter a password'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md mx-auto">
           <div className="mb-10">
             <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-            <p className="mt-2 text-slate-500">Please enter your details to sign in.</p>
+            <p className="mt-2 text-slate-500">Sign in with any email address to log in or auto-create your account.</p>
           </div>
 
           {error && (
